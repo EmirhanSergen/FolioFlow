@@ -3,6 +3,7 @@ class Database {
     public ?PDO $connection = null;
     private array $options;
 
+    // Database connection
     public function __construct(array $config) {
         $this->options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -32,6 +33,7 @@ class Database {
         }
     }
 
+    // Improved with error handling prepare() function
     public function prepare($query): PDOStatement {
         try {
             return $this->connection->prepare($query);

@@ -45,7 +45,7 @@
                         <div class="flex items-center">
                             <div class="bg-blue-100 rounded-md p-3">
                                 <svg class="w-6 h-6 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20v-4m4 4v-8m4 8v-12m4 12v-16"/>
                                 </svg>
                             </div>
                             <div class="ml-4">

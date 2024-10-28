@@ -8,9 +8,9 @@ class Investment {
         $this->symbol = $symbol;
     }
 
+    // Get all active crypto investments with averaging info
     public function getAllOpenInvestments($userId, $forceUpdate = false) {
         try {
-            // Get all active crypto investments with averaging info
             $query = "
                 SELECT 
                     i.*,
@@ -37,10 +37,10 @@ class Investment {
             $stmt->execute([$userId]);
             $investments = $stmt->fetchAll();
 
-            // Get unique symbols for batch update
+            // Get unique symbols for  update
             $symbols = array_unique(array_column($investments, 'name'));
 
-            // Update all prices in one batch if forced or any need updating
+            // Update all prices in one operation if forced or any need updating
             $needsUpdate = $forceUpdate;
             if ($needsUpdate && !empty($symbols)) {
                 // Update all prices in one batch
@@ -57,6 +57,7 @@ class Investment {
             throw $e;
         }
     }
+
 
     public function addInvestment($data, $userId) {
         try {
@@ -215,7 +216,7 @@ class Investment {
 
     public function updateInvestment($id, $userId, $data) {
         try {
-            // Validate symbol format
+            // Validate symbol format ??
             if (strpos($data['name'], 'USDT') === false) {
                 throw new Exception("Invalid crypto symbol format. Must end with USDT");
             }
