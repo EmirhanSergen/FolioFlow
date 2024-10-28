@@ -15,55 +15,25 @@ try {
     $symbol = new Symbol($db);
     $investment = new Investment($db, $symbol);
 
-    // Get basic metrics
-    $investmentCount = $dashboard->getInvestmentCount($_SESSION['user_id']);
-    $investments = $investment->getAllOpenInvestments($_SESSION['user_id']);
+    // Get core metrics
+    $activeInvestmentCount = $dashboard->getActiveInvestmentCount($_SESSION['user_id']);
+    $investmentData = $dashboard->calculateTotalInvestmentByUserId($_SESSION['user_id']);
+    $totalProfitLoss = $dashboard->calculateTotalProfitByUserId($_SESSION['user_id']);
+    $roi = $dashboard->calculateROI($_SESSION['user_id']);
+    $performance = $dashboard->getPerformanceExtremes($_SESSION['user_id']);
 
-    // Initialize variables
-    $totalInitialInvestment = 0;
-    $totalCurrentValue = 0;
-    $totalProfitLoss = 0;
-    $bestPerforming = null;
-    $bestReturn = -INF;
-    $worstPerforming = null;
-    $worstReturn = INF;
-    $roi = 0;
-    $dayChange = 0;
+    // Prepare variables for view
+    $totalInitialInvestment = $investmentData['total_investment'] ?? 0;
+    $totalValue = $investmentData['current_value'] ?? 0;
+    $bestPerforming = $performance['best'];
+    $worstPerforming = $performance['worst'];
 
-    // Calculate portfolio metrics
-    foreach ($investments as $inv) {
-        if (isset($inv['current_price'], $inv['buy_price']) && $inv['buy_price'] > 0) {
-            $initialValue = $inv['buy_price'] * $inv['amount'];
-            $currentValue = $inv['current_price'] * $inv['amount'];
+    // Calculate performance metrics
+    $bestReturn = $bestPerforming ? (($bestPerforming['current_price'] - $bestPerforming['buy_price']) / $bestPerforming['buy_price'] * 100) : 0;
+    $worstReturn = $worstPerforming ? (($worstPerforming['current_price'] - $worstPerforming['buy_price']) / $worstPerforming['buy_price'] * 100) : 0;
 
-            $totalInitialInvestment += $initialValue;
-            $totalCurrentValue += $currentValue;
-
-            // Calculate return percentage for this investment
-            $return = (($inv['current_price'] - $inv['buy_price']) / $inv['buy_price']) * 100;
-
-            // Track best and worst performing
-            if ($return > $bestReturn) {
-                $bestReturn = $return;
-                $bestPerforming = $inv;
-            }
-            if ($return < $worstReturn) {
-                $worstReturn = $return;
-                $worstPerforming = $inv;
-            }
-        }
-    }
-
-    // Calculate total profit/loss
-    $totalProfitLoss = $totalCurrentValue - $totalInitialInvestment;
-
-    // Calculate ROI
-    if ($totalInitialInvestment > 0) {
-        $roi = ($totalProfitLoss / $totalInitialInvestment) * 100;
-    }
-
-    // Variables for view
-    $totalValue = $totalCurrentValue;
+    // Calculate average investment size
+    $avgInvestmentSize = $activeInvestmentCount > 0 ? $totalInitialInvestment / $activeInvestmentCount : 0;
 
 } catch(Exception $e) {
     error_log("Dashboard Error: " . $e->getMessage());

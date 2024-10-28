@@ -29,10 +29,10 @@
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Portfolio Value</p>
                                 <p class="text-2xl font-semibold text-emerald-600">
-                                    $<?= number_format($totalValue ?? 0, 2) ?>
+                                    $<?= number_format($totalValue, 2) ?>
                                 </p>
                                 <p class="text-sm text-gray-500">
-                                    Initial: $<?= number_format($totalInitialInvestment ?? 0, 2) ?>
+                                    Initial: $<?= number_format($totalInitialInvestment, 2) ?>
                                 </p>
                             </div>
                         </div>
@@ -51,10 +51,7 @@
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Active Investments</p>
                                 <p class="text-2xl font-semibold text-blue-900">
-                                    <?= $investmentCount ?? 0 ?>
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    Avg: $<?= number_format($investmentCount > 0 ? ($totalValue ?? 0) / $investmentCount : 0, 2) ?>
+                                    <?= $activeInvestmentCount ?>
                                 </p>
                             </div>
                         </div>
@@ -72,12 +69,10 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Total Profit/Loss</p>
-                                <p class="text-2xl font-semibold <?= ($totalProfitLoss ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
-                                    <?= ($totalProfitLoss ?? 0) >= 0 ? '+' : '-' ?>$<?= number_format(abs($totalProfitLoss ?? 0), 2) ?>
+                                <p class="text-2xl font-semibold <?= $totalProfitLoss >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
+                                    <?= $totalProfitLoss >= 0 ? '+' : '-' ?>$<?= number_format(abs($totalProfitLoss), 2) ?>
                                 </p>
-                                <p class="text-sm <?= ($totalProfitLoss ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
-                                    24h: <?= ($dayChange ?? 0) >= 0 ? '+' : '-' ?><?= number_format(abs($dayChange ?? 0), 2) ?>%
-                                </p>
+                                <p class="text-sm text-gray-500">All Positions</p>
                             </div>
                         </div>
                     </div>
@@ -94,8 +89,8 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">ROI</p>
-                                <p class="text-2xl font-semibold <?= ($roi ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
-                                    <?= ($roi ?? 0) >= 0 ? '+' : '-' ?><?= number_format(abs($roi ?? 0), 2) ?>%
+                                <p class="text-2xl font-semibold <?= $roi >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
+                                    <?= $roi >= 0 ? '+' : '-' ?><?= number_format(abs($roi), 2) ?>%
                                 </p>
                                 <p class="text-sm text-gray-500">All Time</p>
                             </div>
@@ -104,84 +99,119 @@
                 </div>
             </div>
 
-            <!-- Performance Summary & Quick Actions -->
+            <!-- Performance Summary & Quick Actions Section -->
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <!-- Performance Summary -->
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
-                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Performance Summary</h2>
-                        <div class="space-y-4">
-                            <!-- Best Performing -->
-                            <?php if ($bestPerforming): ?>
-                                <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
-                                    <div class="flex items-center">
-                                        <div class="bg-emerald-100 rounded-full p-2">
+                        <h2 class="text-xl font-semibold text-blue-900 mb-4">Performance Summary</h2>
+                        <?php if ($bestPerforming): ?>
+                            <div class="mb-4 rounded-lg bg-emerald-50/50 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="flex items-center gap-3">
                                             <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                             </svg>
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium text-gray-900">
-                                                <?= htmlspecialchars($bestPerforming['name']) ?>
-                                            </p>
-                                            <p class="text-sm text-gray-500">Best Performing</p>
+                                            <div>
+                                                <div class="font-medium text-gray-900">
+                                                    <?= htmlspecialchars($bestPerforming['name']) ?>
+                                                </div>
+                                                <div class="text-sm text-gray-500">Best Performing</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="text-emerald-600 font-semibold">
+                                    <div class="text-emerald-600 font-medium">
                                         +<?= number_format($bestReturn, 2) ?>%
                                     </div>
                                 </div>
-                            <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
 
-                            <!-- Worst Performing -->
-                            <?php if ($worstPerforming): ?>
-                                <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                                    <div class="flex items-center">
-                                        <div class="bg-red-100 rounded-full p-2">
+                        <?php if ($worstPerforming): ?>
+                            <div class="rounded-lg bg-red-50/50 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="flex items-center gap-3">
                                             <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/>
                                             </svg>
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium text-gray-900">
-                                                <?= htmlspecialchars($worstPerforming['name']) ?>
-                                            </p>
-                                            <p class="text-sm text-gray-500">Worst Performing</p>
+                                            <div>
+                                                <div class="font-medium text-gray-900">
+                                                    <?= htmlspecialchars($worstPerforming['name']) ?>
+                                                </div>
+                                                <div class="text-sm text-gray-500">Worst Performing</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="text-red-600 font-semibold">
+                                    <div class="text-red-600 font-medium">
                                         <?= number_format($worstReturn, 2) ?>%
                                     </div>
                                 </div>
-                            <?php endif; ?>
-                        </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
                 <!-- Quick Actions -->
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
-                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Quick Actions</h2>
-                        <div class="grid grid-cols-2 gap-4">
+                        <h2 class="text-xl font-semibold text-blue-900 mb-6">Quick Actions</h2>
+                        <div class="flex flex-wrap gap-4">
+                            <!-- Add Investment Button - Primary action -->
                             <a href="/FolioFlow/add-investment"
-                               class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                               class="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
-                                Add Investment
+                                <span>Add Investment</span>
                             </a>
+
+                            <!-- View All Button - Secondary action -->
                             <a href="/FolioFlow/investments"
-                               class="inline-flex items-center justify-center px-4 py-2 border border-blue-900 text-sm font-medium rounded-md text-blue-900 bg-white hover:bg-blue-50">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                               class="flex items-center gap-2 px-6 py-2.5 bg-white text-blue-900 font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
                                 </svg>
-                                View All
+                                <span>View All</span>
+                            </a>
+                        </div>
+
+                        <!-- Optional: Add more action cards below -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                            <a href="/FolioFlow/closed-positions"
+                               class="group p-4 border border-gray-200 rounded-lg hover:border-blue-200 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Closed Positions</h3>
+                                        <p class="text-sm text-gray-500">View your investment history</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a href="/FolioFlow/investments#analytics"
+                               class="group p-4 border border-gray-200 rounded-lg hover:border-blue-200 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Analytics</h3>
+                                        <p class="text-sm text-gray-500">View detailed performance metrics</p>
+                                    </div>
+                                </div>
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </main>
 
 <?php require('partials/footer.php') ?>
