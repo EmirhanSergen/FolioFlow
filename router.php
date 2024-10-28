@@ -11,7 +11,8 @@ $routes = [
     'investment' => 'controllers/investment.php',
     'add-investment' => 'controllers/add-investment.php',
     'closed-positions' => 'controllers/closed-positions.php',
-    'close-position' => 'controllers/close-position.php'
+    'close-position' => 'controllers/close-position.php',
+    'analytics' => 'controllers/analytics.php',
 ];
 
 

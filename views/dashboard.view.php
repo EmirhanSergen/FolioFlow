@@ -157,44 +157,41 @@
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
                         <h2 class="text-xl font-semibold text-blue-900 mb-6">Quick Actions</h2>
-                        <div class="flex flex-wrap gap-4">
-                            <!-- Add Investment Button - Primary action -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Add Investment -->
                             <a href="/FolioFlow/add-investment"
-                               class="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
-                                <span>Add Investment</span>
-                            </a>
-
-                            <!-- View All Button - Secondary action -->
-                            <a href="/FolioFlow/investments"
-                               class="flex items-center gap-2 px-6 py-2.5 bg-white text-blue-900 font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
-                                </svg>
-                                <span>View All</span>
-                            </a>
-                        </div>
-
-                        <!-- Optional: Add more action cards below -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                            <a href="/FolioFlow/closed-positions"
-                               class="group p-4 border border-gray-200 rounded-lg hover:border-blue-200 transition-colors">
+                               class="group p-4 border border-emerald-200 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
                                 <div class="flex items-center gap-3">
-                                    <div class="p-2 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                                    <div class="p-2 rounded-lg bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200 transition-colors">
                                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 class="font-medium text-gray-900">Closed Positions</h3>
-                                        <p class="text-sm text-gray-500">View your investment history</p>
+                                        <h3 class="font-medium text-gray-900">Add Investment</h3>
+                                        <p class="text-sm text-gray-500">Track a new position</p>
                                     </div>
                                 </div>
                             </a>
 
-                            <a href="/FolioFlow/investments#analytics"
+                            <!-- View Investments -->
+                            <a href="/FolioFlow/investments"
+                               class="group p-4 border border-gray-200 rounded-lg hover:border-blue-200 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-medium text-gray-900">Investments</h3>
+                                        <p class="text-sm text-gray-500">Manage your positions</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- Analytics -->
+                            <a href="/FolioFlow/analytics"
                                class="group p-4 border border-gray-200 rounded-lg hover:border-blue-200 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <div class="p-2 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
@@ -203,8 +200,8 @@
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 class="font-medium text-gray-900">Analytics</h3>
-                                        <p class="text-sm text-gray-500">View detailed performance metrics</p>
+                                        <h3 class="font-medium text-gray-900">Advanced Analytics</h3>
+                                        <p class="text-sm text-gray-500">Detailed performance metrics</p>
                                     </div>
                                 </div>
                             </a>
