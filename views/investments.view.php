@@ -186,8 +186,16 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="/FolioFlow/investment?id=<?= $investment['id'] ?>"
                                            class="text-blue-900 hover:text-blue-700 mr-4">Edit</a>
-                                        <button onclick="closePosition(<?= $investment['id'] ?>)"
-                                                class="text-red-600 hover:text-red-900">Close</button>
+                                        <button onclick="showCloseModal(
+                                        <?= $investment['id'] ?>,
+                                                '<?= htmlspecialchars($investment['name']) ?>',
+                                        <?= $investment['current_price'] ?>,
+                                        <?= $investment['amount'] ?>,
+                                        <?= $investment['buy_price'] ?>
+                                                )"
+                                                class="text-red-600 hover:text-red-900">
+                                            Close
+                                        </button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -197,34 +205,185 @@
                 </div>
             <?php endif; ?>
         </div>
+        <!-- Add this modal HTML at the end of your main content, before the closing </main> tag -->
+        <div id="closeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-[480px] shadow-lg rounded-md bg-white">
+                <!-- Loading Overlay -->
+                <div id="loadingOverlay" class="hidden absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center rounded-md z-50">
+                    <div class="flex flex-col items-center space-y-3">
+                        <svg class="animate-spin h-8 w-8 text-blue-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-blue-900 font-medium">Closing Position...</span>
+                    </div>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="mt-3">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Close Position</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Investment Details -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Investment</p>
+                                <p id="modalSymbol" class="text-lg font-semibold text-gray-900"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Current Price</p>
+                                <p class="text-lg font-semibold text-gray-900">$<span id="modalCurrentPrice"></span></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Initial Investment</p>
+                                <p id="modalInitialInvestment" class="text-lg font-semibold text-gray-900"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Current Value</p>
+                                <p id="modalCurrentValue" class="text-lg font-semibold text-gray-900"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sell Price Input -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sell Price</label>
+                        <div class="relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number"
+                                   id="modalSellPrice"
+                                   step="0.01"
+                                   class="pl-7 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 h-10"
+                                   required>
+                            <button type="button"
+                                    onclick="useCurrentPrice()"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center bg-gray-50 hover:bg-gray-100 border-l border-gray-300 rounded-r-md text-sm text-blue-600 hover:text-blue-800">
+                                Use Current
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estimated Profit/Loss -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-500">Estimated Profit/Loss</span>
+                            <span id="modalProfitLoss" class="text-lg font-semibold"></span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeModal()"
+                                class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Cancel
+                        </button>
+                        <button onclick="submitClose()"
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            Close Position
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
-        async function refreshPrices() {
-            try {
-                const response = await fetch('/FolioFlow/api/update-prices.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+        let currentInvestmentId = null;
+        let currentPrice = 0;
+        let currentAmount = 0;
+        let buyPrice = 0;
 
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Failed to update prices. Please try again.');
+        function showCloseModal(id, symbol, price, amount, initialPrice) {
+            currentInvestmentId = id;
+            currentPrice = price;
+            currentAmount = amount;
+            buyPrice = initialPrice;
+
+            document.getElementById('modalSymbol').textContent = symbol;
+            document.getElementById('modalCurrentPrice').textContent = price.toFixed(2);
+            document.getElementById('modalSellPrice').value = price.toFixed(2);
+
+            // Calculate and display initial investment and current value
+            const initialInvestment = buyPrice * amount;
+            const currentValue = price * amount;
+            document.getElementById('modalInitialInvestment').textContent = `$${initialInvestment.toFixed(2)}`;
+            document.getElementById('modalCurrentValue').textContent = `$${currentValue.toFixed(2)}`;
+
+            updateProfitLoss(price);
+            document.getElementById('closeModal').classList.remove('hidden');
+        }
+
+        function updateProfitLoss(sellPrice) {
+            const profitLoss = (sellPrice - buyPrice) * currentAmount;
+            const profitLossPercentage = (profitLoss / (buyPrice * currentAmount)) * 100;
+            const element = document.getElementById('modalProfitLoss');
+
+            element.textContent = `${profitLoss >= 0 ? '+' : ''}$${profitLoss.toFixed(2)} (${profitLossPercentage.toFixed(2)}%)`;
+            element.className = `text-lg font-semibold ${profitLoss >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+        }
+
+        function useCurrentPrice() {
+            const input = document.getElementById('modalSellPrice');
+            input.value = currentPrice.toFixed(2);
+            updateProfitLoss(currentPrice);
+        }
+
+        // Add input event listener to update profit/loss when sell price changes
+        document.getElementById('modalSellPrice').addEventListener('input', function(e) {
+            updateProfitLoss(parseFloat(e.target.value) || 0);
+        });
+
+        function closeModal() {
+            document.getElementById('closeModal').classList.add('hidden');
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            currentInvestmentId = null;
+        }
+
+        async function submitClose() {
+            const sellPrice = parseFloat(document.getElementById('modalSellPrice').value);
+
+            if (!sellPrice || sellPrice <= 0) {
+                alert('Please enter a valid sell price');
+                return;
+            }
+
+            if (confirm('Are you sure you want to close this position?')) {
+                try {
+                    document.getElementById('loadingOverlay').classList.remove('hidden');
+
+                    // Add small delay to ensure smooth transition
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    window.location.href = `/FolioFlow/close-position?id=${currentInvestmentId}&price=${sellPrice}`;
+                } catch (error) {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    alert('Error closing position. Please try again.');
                 }
-            } catch (error) {
-                alert('Error updating prices. Please try again.');
             }
         }
 
-        function closePosition(id) {
-            const sellPrice = prompt("Enter the selling price:");
-            if (sellPrice !== null && !isNaN(sellPrice)) {
-                window.location.href = `/FolioFlow/close-position?id=${id}&price=${sellPrice}`;
+        // Close modal if clicking outside
+        document.getElementById('closeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
             }
-        }
+        });
+
+        // Handle Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('closeModal').classList.contains('hidden')) {
+                closeModal();
+            }
+        });
     </script>
-
 <?php require('partials/footer.php') ?>

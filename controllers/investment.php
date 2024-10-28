@@ -61,10 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($sellPrice === false || $sellPrice === null) {
                     throw new Exception("Invalid sell price");
                 }
-                $investment->closeInvestment($id, $sellPrice);
-                $_SESSION['success_message'] = "Investment closed successfully!";
-                header('Location: /investments');
-                exit();
+
+                if ($investment->closeInvestment($id, $sellPrice)) {
+                    $_SESSION['success_message'] = "Investment closed successfully!";
+                    header('Location: /FolioFlow/dashboard'); // Changed from /investments to /dashboard
+                    exit();
+                } else {
+                    throw new Exception("Failed to close investment");
+                }
 
             default:
                 $errors[] = "Invalid action";

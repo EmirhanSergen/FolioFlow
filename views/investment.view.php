@@ -179,15 +179,18 @@
                                                step="0.01"
                                                id="sell_price"
                                                name="sell_price"
-                                               value="<?= $investmentData['current_price'] ?? '' ?>"
+                                               value="<?= number_format($investmentData['current_price'] ?? 0, 2, '.', '') ?>"
                                                required>
                                     </div>
                                 </div>
 
-                                <div class="flex justify-end">
+                                <div class="flex justify-between items-center">
+                                    <div class="text-sm text-gray-500">
+                                        Current Price: $<?= number_format($investmentData['current_price'] ?? 0, 2, '.', ',') ?>
+                                    </div>
                                     <button class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm"
                                             type="submit"
-                                            onclick="return confirm('Are you sure you want to close this investment?')">
+                                            onclick="return confirm('Are you sure you want to close this investment? This action cannot be undone.')">
                                         Close Investment
                                     </button>
                                 </div>
