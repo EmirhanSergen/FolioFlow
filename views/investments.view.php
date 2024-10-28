@@ -303,6 +303,25 @@
         let currentAmount = 0;
         let buyPrice = 0;
 
+        async function refreshPrices() {
+            try {
+                const response = await fetch('/FolioFlow/api/update-prices.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to update prices. Please try again.');
+                }
+            } catch (error) {
+                alert('Error updating prices. Please try again.');
+            }
+        }
+
         function showCloseModal(id, symbol, price, amount, initialPrice) {
             currentInvestmentId = id;
             currentPrice = price;
