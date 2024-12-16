@@ -77,10 +77,34 @@
                                     type="password"
                                     required
                                     placeholder="••••••••"
+                                    onkeyup="checkPassword(this.value)"
                             >
-                            <?php if (!empty($errors['password'])): ?>
-                                <p class="mt-1 text-sm text-red-600"><?php echo htmlspecialchars($errors['password']); ?></p>
-                            <?php endif; ?>
+                            <div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                <div id="uppercase" class="flex items-center text-red-500">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8"/>
+                                    </svg>
+                                    Uppercase letter
+                                </div>
+                                <div id="lowercase" class="flex items-center text-red-500">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8"/>
+                                    </svg>
+                                    Lowercase letter
+                                </div>
+                                <div id="number" class="flex items-center text-red-500">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8"/>
+                                    </svg>
+                                    Number
+                                </div>
+                                <div id="special" class="flex items-center text-red-500">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8"/>
+                                    </svg>
+                                    Special character
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Confirm Password Input -->
@@ -102,12 +126,11 @@
                         </div>
 
                         <!-- Submit Button -->
-                        <div class="flex items-center justify-between mb-6">
-                            <button type="submit"
-                                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150">
-                                Create Account
-                            </button>
-                        </div>
+                        <button type="submit"
+                                class="w-full bg-gray-400 text-white font-semibold py-2 px-4 rounded-md shadow-sm cursor-not-allowed"
+                                disabled>
+                            Create Account
+                        </button>
 
                         <!-- Login Link -->
                         <p class="text-center text-sm text-gray-600">
@@ -121,5 +144,53 @@
             </div>
         </div>
     </main>
+    <script>
+        function checkPassword(password) {
+            // Define validation criteria
+            const criteria = {
+                length: password.length >= 5,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+            };
+
+            // Update each requirement's visual state
+            Object.keys(criteria).forEach(criterion => {
+                const element = document.getElementById(criterion);
+                if (element) {
+                    if (criteria[criterion]) {
+                        element.className = 'flex items-center text-green-500';
+                        element.querySelector('svg').innerHTML = `
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                `;
+                    } else {
+                        element.className = 'flex items-center text-red-500';
+                        element.querySelector('svg').innerHTML = `
+                    <circle cx="10" cy="10" r="8"/>
+                `;
+                    }
+                }
+            });
+
+            // Optional: Enable/disable submit button based on all criteria being met
+            const submitButton = document.querySelector('button[type="submit"]');
+            if (submitButton) {
+                const allCriteriaMet = Object.values(criteria).every(Boolean);
+                submitButton.disabled = !allCriteriaMet;
+                submitButton.className = allCriteriaMet
+                    ? 'w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm transition duration-150'
+                    : 'w-full bg-gray-400 text-white font-semibold py-2 px-4 rounded-md shadow-sm cursor-not-allowed';
+            }
+        }
+
+        // Initialize validation state when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                checkPassword(passwordInput.value);
+            }
+        });
+    </script>
 
 <?php require('partials/footer.php') ?>

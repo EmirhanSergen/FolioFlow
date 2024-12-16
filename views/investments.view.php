@@ -166,7 +166,7 @@
                                         <?php if ($investment['current_price']): ?>
                                             <div class="text-sm <?= $investment['profit_loss'] >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
                                                 $<?= number_format($investment['profit_loss'], 2) ?>
-                                                (<?= number_format(($investment['profit_loss'] / ($investment['buy_price'] * $investment['amount'])) * 100, 2) ?>%)
+                                                (<?= number_format(($investment['profit_loss'] / ($investment['buy_price'] * $investment['amount'])) * 100, 5) ?>%)
                                             </div>
                                         <?php else: ?>
                                             <div class="text-sm text-gray-500">

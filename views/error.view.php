@@ -2,14 +2,13 @@
 <?php require('partials/navbar.php') ?>
 
     <main class="min-h-screen bg-slate-50 py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div class="bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-8 text-center">
                     <h1 class="text-5xl font-bold text-white mb-2"><?= $code ?></h1>
-                    <p class="text-xl text-blue-100"><?= $error['title'] ?></p>
+                    <p class="text-2xl font-bold text-white mb-2" >There is not such a page</p>
                 </div>
                 <div class="p-6 text-center">
-                    <p class="text-gray-600 mb-8"><?= $error['message'] ?></p>
                     <a href="/FolioFlow"
                        class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-emerald-600 hover:bg-emerald-700">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

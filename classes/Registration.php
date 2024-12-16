@@ -4,6 +4,7 @@ class Registration {
     private $db;
     private $errors = [];
 
+    // Db connection
     public function __construct($database) {
         $this->db = $database;
     }
@@ -39,6 +40,23 @@ class Registration {
         // Password validation
         if (strlen($password) < 5) {
             $this->errors['password'] = 'Password must be at least 5 characters';
+        } else {
+            // Check for uppercase
+            if (!preg_match('/[A-Z]/', $password)) {
+                $this->errors['password'] = 'Password must contain at least one uppercase letter';
+            }
+            // Check for lowercase
+            if (!preg_match('/[a-z]/', $password)) {
+                $this->errors['password'] = 'Password must contain at least one lowercase letter';
+            }
+            // Check for number
+            if (!preg_match('/[0-9]/', $password)) {
+                $this->errors['password'] = 'Password must contain at least one number';
+            }
+            // Check for special character
+            if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+                $this->errors['password'] = 'Password must contain at least one special character';
+            }
         }
 
         if ($password !== $confirm_password) {

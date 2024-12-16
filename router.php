@@ -30,7 +30,8 @@ function routeToController($uri,$routes){
 function abort($code = 404 ){
     http_response_code(404);
 
-    require "views/{$code}.view.php";
+
+    require "views/error.view.php";
 
     die();
 }
