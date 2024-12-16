@@ -133,10 +133,10 @@
                         </button>
 
                         <!-- Login Link -->
-                        <p class="text-center text-sm text-gray-600">
+                        <p class="text-center text-sm text-gray-600 mt-8">
                             Already have an account?
                             <a href="/FolioFlow/login" class="text-blue-900 hover:text-blue-700 font-semibold">
-                                Sign in
+                                    Sign in
                             </a>
                         </p>
                     </form>
