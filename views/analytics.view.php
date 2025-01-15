@@ -1,6 +1,18 @@
 <?php require('partials/header.php') ?>
 <?php require('partials/navbar.php') ?>
 
+
+    <?php
+        include_once 'analytics.php';
+        // Default or selected period (set by dropdowns)
+        $portfolioPeriod = isset($_POST['portfolio_period']) ? $_POST['portfolio_period'] : 'daily';
+        $performancePeriod = isset($_POST['performance_period']) ? $_POST['performance_period'] : 'monthly';
+
+        // Fetch data for the selected periods
+        $portfolioData = getPortfolioValueByPeriod($portfolioPeriod);
+        $monthlyPerformance = getPerformanceByPeriod($performancePeriod);
+    ?>
+
     <main class="min-h-screen bg-slate-50 py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Header -->
@@ -16,6 +28,11 @@
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
                         <h2 class="text-lg font-semibold text-blue-900 mb-4">Portfolio Value Over Time</h2>
+                        <select id="portfolioPeriod" class="mb-4 p-2 border rounded">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly" selected>Monthly</option>
+                        </select>
                         <div class="aspect-[16/9]">
                             <canvas id="portfolioChart"></canvas>
                         </div>
@@ -33,11 +50,16 @@
                 </div>
             </div>
 
-            <!-- Monthly Performance & Win/Loss -->
+            <!-- Performance & Win/Loss -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     <div class="p-6">
-                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Monthly Performance</h2>
+                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Performance Chart</h2>
+                        <select id="performancePeriod" class="mb-4 p-2 border rounded">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly" selected>Monthly</option>
+                        </select>
                         <div class="aspect-[16/9]">
                             <canvas id="performanceChart"></canvas>
                         </div>
@@ -137,6 +159,58 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Listen for dropdown changes
+        document.getElementById('portfolioPeriod').addEventListener('change', updatePortfolioChart);
+        document.getElementById('performancePeriod').addEventListener('change', updatePerformanceChart);
+
+        // Update Portfolio Chart
+        async function updatePortfolioChart() {
+            const period = document.getElementById('portfolioPeriod').value;
+
+            const response = await fetch('controllers/analytics.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ portfolio_period: period })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const portfolioHistory = data.portfolioHistory;
+
+                portfolioChart.data.labels = portfolioHistory.map(item => item.period);
+                portfolioChart.data.datasets[0].data = portfolioHistory.map(item => item.current_value);
+                portfolioChart.data.datasets[1].data = portfolioHistory.map(item => item.invested_value);
+
+                portfolioChart.update();
+            } else {
+                console.error('Error updating portfolio chart:', data.error);
+            }
+        }
+
+        // Update Performance Chart
+        async function updatePerformanceChart() {
+            const period = document.getElementById('performancePeriod').value;
+
+            const response = await fetch('controllers/analytics.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ performance_period: period })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const performanceData = data.performanceData;
+
+                performanceChart.data.labels = performanceData.map(item => item.period);
+                performanceChart.data.datasets[0].data = performanceData.map(item => item.profit_loss);
+
+                performanceChart.update();
+            } else {
+                console.error('Error updating performance chart:', data.error);
+            }
+        }
         // Portfolio Value Chart
         new Chart(document.getElementById('portfolioChart'), {
             type: 'line',

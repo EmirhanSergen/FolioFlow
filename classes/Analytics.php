@@ -6,32 +6,51 @@ class Analytics {
         $this->db = $database;
     }
 
-    public function getPortfolioHistory($userId) {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT 
-                    DATE(i.created_at) as date,
-                    SUM(i.buy_price * i.amount) as invested_value,
-                    SUM(
-                        CASE 
-                            WHEN i.status = 'closed' THEN i.sell_price * i.amount
-                            WHEN s.current_price IS NOT NULL THEN s.current_price * i.amount
-                            ELSE i.buy_price * i.amount
-                        END
-                    ) as current_value
-                FROM investments i
-                LEFT JOIN symbols s ON i.name = s.symbol
-                WHERE i.user_id = ?
-                GROUP BY DATE(i.created_at)
-                ORDER BY DATE(i.created_at)
-            ");
-            $stmt->execute([$userId]);
-            return $stmt->fetchAll();
-        } catch (Exception $e) {
-            error_log("Error getting portfolio history: " . $e->getMessage());
-            throw new Exception("Failed to get portfolio history");
+    public function getPortfolioHistoryByPeriod($userId, $period = 'daily') {
+        $groupBy = '';
+
+        // Determine the GROUP BY clause based on the selected period
+        switch ($period) {
+            case 'daily':
+                $groupBy = "DATE_FORMAT(i.created_at, '%Y-%m-%d')";
+                break;
+            case 'weekly':
+                $groupBy = "YEAR(i.created_at), WEEK(i.created_at)";
+                break;
+            case 'monthly':
+                $groupBy = "DATE_FORMAT(i.created_at, '%Y-%m')";
+                break;
+            default:
+                throw new Exception("Unsupported period: $period");
         }
+
+        // SQL query with dynamic grouping
+        $stmt = $this->db->prepare("
+        SELECT 
+            $groupBy as period,
+            SUM(i.buy_price * i.amount) as invested_value,
+            SUM(
+                CASE 
+                    WHEN i.status = 'closed' THEN i.sell_price * i.amount
+                    WHEN s.current_price IS NOT NULL THEN s.current_price * i.amount
+                    ELSE i.buy_price * i.amount
+                END
+            ) as current_value
+            FROM investments i
+            LEFT JOIN symbols s ON i.name = s.symbol
+            WHERE i.user_id = ?
+            GROUP BY period
+            ORDER BY period
+        ");
+
+        // Execute the query with the user ID
+        $stmt->execute([$userId]);
+
+        // Fetch and return the results
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
 
     public function getInvestmentDistribution($userId) {
         try {
@@ -59,39 +78,51 @@ class Analytics {
         }
     }
 
-    public function getMonthlyPerformance($userId) {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT 
-                    DATE_FORMAT(i.created_at, '%Y-%m') as month,
-                    COUNT(*) as total_trades,
-                    SUM(
-                        CASE 
-                            WHEN i.status = 'closed' THEN (i.sell_price - i.buy_price) * i.amount
-                            WHEN s.current_price IS NOT NULL THEN (s.current_price - i.buy_price) * i.amount
-                            ELSE 0
-                        END
-                    ) as profit_loss
-                FROM investments i
-                LEFT JOIN symbols s ON i.name = s.symbol
-                WHERE i.user_id = ?
-                GROUP BY DATE_FORMAT(i.created_at, '%Y-%m')
-                ORDER BY month
-            ");
-            $stmt->execute([$userId]);
-            return $stmt->fetchAll();
-        } catch (Exception $e) {
-            error_log("Error getting monthly performance: " . $e->getMessage());
-            throw new Exception("Failed to get monthly performance");
+    public function getPerformanceByPeriod($userId, $period = 'monthly') {
+        $groupBy = '';
+
+        switch ($period) {
+            case 'daily':
+                $groupBy = 'DATE(i.created_at)';
+                break;
+            case 'weekly':
+                $groupBy = 'YEAR(i.created_at), WEEK(i.created_at)';
+                break;
+            case 'monthly':
+                $groupBy = 'DATE_FORMAT(i.created_at, \'%Y-%m\')';
+                break;
+            default:
+                throw new Exception("Unsupported period: $period");
         }
+
+        $stmt = $this->db->prepare("
+        SELECT 
+            $groupBy as period,
+            COUNT(*) as total_trades,
+            SUM(
+                CASE 
+                    WHEN i.status = 'closed' THEN (i.sell_price - i.buy_price) * i.amount
+                    WHEN s.current_price IS NOT NULL THEN (s.current_price - i.buy_price) * i.amount
+                    ELSE 0
+                END
+            ) as profit_loss
+        FROM investments i
+        LEFT JOIN symbols s ON i.name = s.symbol
+        WHERE i.user_id = ?
+        GROUP BY period
+        ORDER BY period
+    ");
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
     }
+
 
     public function getWinLossRatio($userId) {
         try {
             $stmt = $this->db->prepare("
                 SELECT
-                    SUM(CASE WHEN (sell_price - buy_price) * amount > 0 THEN 1 ELSE 0 END) as wins,
-                    SUM(CASE WHEN (sell_price - buy_price) * amount < 0 THEN 1 ELSE 0 END) as losses
+                    SUM(CASE WHEN (sell_price - buy_price)  > 0 THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN (sell_price - buy_price)  < 0 THEN 1 ELSE 0 END) as losses
                 FROM investments
                 WHERE user_id = ? AND status = 'closed'
             ");
@@ -109,17 +140,17 @@ class Analytics {
             $statsStmt = $this->db->prepare("
             SELECT 
                 COUNT(*) as total_trades,
-                SUM(CASE WHEN (sell_price - buy_price) * amount > 0 THEN 1 ELSE 0 END) as winning_trades,
-                SUM(CASE WHEN (sell_price - buy_price) * amount < 0 THEN 1 ELSE 0 END) as losing_trades,
-                AVG(CASE WHEN (sell_price - buy_price) * amount > 0 
+                SUM(CASE WHEN (sell_price - buy_price) > 0 THEN 1 ELSE 0 END) as winning_trades,
+                SUM(CASE WHEN (sell_price - buy_price)  < 0 THEN 1 ELSE 0 END) as losing_trades,
+                AVG(CASE WHEN (sell_price - buy_price)  > 0 
                     THEN (sell_price - buy_price) * amount ELSE NULL END) as avg_profit,
-                AVG(CASE WHEN (sell_price - buy_price) * amount < 0 
+                AVG(CASE WHEN (sell_price - buy_price)  < 0 
                     THEN ABS((sell_price - buy_price) * amount) ELSE NULL END) as avg_loss,
                 MAX((sell_price - buy_price) * amount) as largest_win,
-                MIN((sell_price - buy_price) * amount) as largest_loss,
-                SUM(CASE WHEN (sell_price - buy_price) * amount > 0 
+                ABS(MIN((sell_price - buy_price) * amount)) as largest_loss,
+                SUM(CASE WHEN (sell_price - buy_price) > 0 
                     THEN (sell_price - buy_price) * amount ELSE 0 END) as total_gains,
-                ABS(SUM(CASE WHEN (sell_price - buy_price) * amount < 0 
+                ABS(SUM(CASE WHEN (sell_price - buy_price)  < 0 
                     THEN (sell_price - buy_price) * amount ELSE 0 END)) as total_losses
             FROM investments 
             WHERE user_id = ? AND status = 'closed'

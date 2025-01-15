@@ -17,7 +17,9 @@ $routes = [
 
 
 //
-function routeToController($uri,$routes){
+function routeToController($uri, $routes){
+    // Remove query strings from URI
+    $uri = strtok($uri, '?');
 
     if (array_key_exists($uri, $routes)) {
         require $routes[$uri];
@@ -25,6 +27,7 @@ function routeToController($uri,$routes){
         abort();
     }
 }
+
 
 // Error handling
 function abort($code = 404 ){

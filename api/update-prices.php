@@ -17,7 +17,7 @@ try {
     // Get current timestamp before updates
     $startTime = microtime(true);
 
-    // Force update prices and get updated investments
+    //
     $investments = $investment->getAllOpenInvestments($_SESSION['user_id'], true);
 
     // Calculate totals
