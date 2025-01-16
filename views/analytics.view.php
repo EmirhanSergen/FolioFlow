@@ -1,279 +1,183 @@
-<?php require('partials/header.php') ?>
-<?php require('partials/navbar.php') ?>
+<?php
+// views/analytics-view.php
+// Minimal example with no partials, just pure HTML/PHP:
 
+session_start();
+// Suppose you must be logged in. If not, redirect or show an error.
+if (empty($_SESSION['user_id'])) {
+    die('Not logged in');
+}
+?>
 
-    <?php
-        include_once 'analytics.php';
-        // Default or selected period (set by dropdowns)
-        $portfolioPeriod = isset($_POST['portfolio_period']) ? $_POST['portfolio_period'] : 'daily';
-        $performancePeriod = isset($_POST['performance_period']) ? $_POST['performance_period'] : 'monthly';
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Portfolio Analytics</title>
+    <!-- We can include any CSS you like here, or a tailwind link if you prefer -->
+</head>
+<body>
 
-        // Fetch data for the selected periods
-        $portfolioData = getPortfolioValueByPeriod($portfolioPeriod);
-        $monthlyPerformance = getPerformanceByPeriod($performancePeriod);
-    ?>
+<h1>Portfolio Analytics</h1>
 
-    <main class="min-h-screen bg-slate-50 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Header -->
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-                <div class="bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-8">
-                    <h1 class="text-2xl font-bold text-white">Portfolio Analytics</h1>
-                    <p class="mt-2 text-blue-100">Detailed analysis of your investment performance</p>
-                </div>
-            </div>
+<!-- Dropdowns for selecting period -->
+<div>
+    <select id="portfolioPeriod">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly" selected>Monthly</option>
+    </select>
 
-            <!-- Portfolio Value Chart -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-6">
-                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Portfolio Value Over Time</h2>
-                        <select id="portfolioPeriod" class="mb-4 p-2 border rounded">
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly" selected>Monthly</option>
-                        </select>
-                        <div class="aspect-[16/9]">
-                            <canvas id="portfolioChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+    <select id="performancePeriod">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly" selected>Monthly</option>
+    </select>
+</div>
 
-                <!-- Investment Distribution -->
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-6">
-                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Investment Distribution</h2>
-                        <div class="aspect-[16/9]">
-                            <canvas id="distributionChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- Canvas elements for the three charts -->
+<canvas id="portfolioChart" width="400" height="200" style="border:1px solid #ccc;"></canvas>
+<canvas id="distributionChart" width="400" height="200" style="border:1px solid #ccc;"></canvas>
+<canvas id="performanceChart" width="400" height="200" style="border:1px solid #ccc;"></canvas>
 
-            <!-- Performance & Win/Loss -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-6">
-                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Performance Chart</h2>
-                        <select id="performancePeriod" class="mb-4 p-2 border rounded">
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly" selected>Monthly</option>
-                        </select>
-                        <div class="aspect-[16/9]">
-                            <canvas id="performanceChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+<!-- Trading stats displayed as text -->
+<div>
+    <p><strong>Win Rate:</strong> <span id="winRate">--</span></p>
+    <p><strong>Profit Factor:</strong> <span id="profitFactor">--</span></p>
+    <p><strong>Average Profit:</strong> <span id="averageProfit">--</span></p>
+    <p><strong>Average Loss:</strong> <span id="averageLoss">--</span></p>
+</div>
 
-                <!-- Trading Statistics Section -->
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                    <div class="p-6">
-                        <h2 class="text-lg font-semibold text-blue-900 mb-4">Trading Statistics</h2>
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-                        <!-- Summary Cards -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                            <div class="p-4 bg-emerald-50 rounded-lg">
-                                <p class="text-sm font-medium text-gray-600">Win Rate</p>
-                                <p class="text-2xl font-semibold text-emerald-600">
-                                    <?php
-                                    $total = ($winLossRatio['wins'] ?? 0) + ($winLossRatio['losses'] ?? 0);
-                                    echo number_format(($total > 0 ? ($winLossRatio['wins'] / $total) * 100 : 0), 1) . '%';
-                                    ?>
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    <?= ($winLossRatio['wins'] ?? 0) ?> wins / <?= ($winLossRatio['losses'] ?? 0) ?> losses
-                                </p>
-                            </div>
+<script>
+    let portfolioChart, distributionChart, performanceChart;
 
-                            <div class="p-4 bg-blue-50 rounded-lg">
-                                <p class="text-sm font-medium text-gray-600">Avg Profit</p>
-                                <p class="text-2xl font-semibold text-blue-600">
-                                    $<?= number_format($averageProfitPerTrade ?? 0, 2) ?>
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">Per winning trade</p>
-                            </div>
-
-                            <div class="p-4 bg-red-50 rounded-lg">
-                                <p class="text-sm font-medium text-gray-600">Avg Loss</p>
-                                <p class="text-2xl font-semibold text-red-600">
-                                    $<?= number_format($averageLossPerTrade ?? 0, 2) ?>
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">Per losing trade</p>
-                            </div>
-
-                            <div class="p-4 bg-purple-50 rounded-lg">
-                                <p class="text-sm font-medium text-gray-600">Profit Factor</p>
-                                <p class="text-2xl font-semibold text-purple-600">
-                                    <?= number_format($profitFactor ?? 0, 2) ?>
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">Gains/Losses ratio</p>
-                            </div>
-                        </div>
-
-                        <!-- Additional Statistics -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Time Analysis -->
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <h3 class="text-lg font-medium text-gray-900 mb-3">Time Analysis</h3>
-                                <div class="space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-blue-800">Avg Hold Time</span>
-                                        <span class="text-gray-900"><?= $avgHoldTime ?? 0 ?> days</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-blue-800">Best Month</span>
-                                        <span class="text-emerald-600">$<?= number_format(abs($bestMonthProfit ?? 0), 2) ?></span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-blue-800">Worst Month</span>
-                                        <span class="text-red-600">-$<?= number_format(abs($worstMonthLoss ?? 0), 2) ?></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Risk Metrics -->
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <h3 class="text-lg font-medium text-gray-900 mb-3">Risk Metrics</h3>
-                                <div class="space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-blue-800">Largest Win</span>
-                                        <span class="text-emerald-600">+$<?= number_format(abs($largestWin ?? 0), 2) ?></span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-blue-800">Largest Loss</span>
-                                        <span class="text-red-600">-$<?= number_format(abs($largestLoss ?? 0), 2) ?></span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-blue-800">Risk/Reward</span>
-                                        <span class="text-gray-900"><?= number_format($riskRewardRatio ?? 0, 2) ?></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Listen for dropdown changes
-        document.getElementById('portfolioPeriod').addEventListener('change', updatePortfolioChart);
-        document.getElementById('performancePeriod').addEventListener('change', updatePerformanceChart);
-
-        // Update Portfolio Chart
-        async function updatePortfolioChart() {
-            const period = document.getElementById('portfolioPeriod').value;
-
-            const response = await fetch('controllers/analytics.php', {
+    async function fetchAnalyticsData(portfolioPeriod, performancePeriod) {
+        try {
+            const response = await fetch('../controllers/analytics.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ portfolio_period: period })
+                body: JSON.stringify({
+                    portfolio_period: portfolioPeriod,
+                    performance_period: performancePeriod
+                })
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-                const portfolioHistory = data.portfolioHistory;
-
-                portfolioChart.data.labels = portfolioHistory.map(item => item.period);
-                portfolioChart.data.datasets[0].data = portfolioHistory.map(item => item.current_value);
-                portfolioChart.data.datasets[1].data = portfolioHistory.map(item => item.invested_value);
-
-                portfolioChart.update();
-            } else {
-                console.error('Error updating portfolio chart:', data.error);
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
             }
+
+            const { chartData, winLossRatio, tradeMetrics } = await response.json();
+            // Update charts
+            updateCharts(chartData);
+            // Update text stats
+            updateStatistics(winLossRatio, tradeMetrics);
+
+        } catch (err) {
+            console.error('Error fetching analytics data:', err);
         }
+    }
 
-        // Update Performance Chart
-        async function updatePerformanceChart() {
-            const period = document.getElementById('performancePeriod').value;
+    function updateCharts(chartData) {
+        // Destroy old charts if they exist
+        if (portfolioChart)    portfolioChart.destroy();
+        if (distributionChart) distributionChart.destroy();
+        if (performanceChart)  performanceChart.destroy();
 
-            const response = await fetch('controllers/analytics.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ performance_period: period })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                const performanceData = data.performanceData;
-
-                performanceChart.data.labels = performanceData.map(item => item.period);
-                performanceChart.data.datasets[0].data = performanceData.map(item => item.profit_loss);
-
-                performanceChart.update();
-            } else {
-                console.error('Error updating performance chart:', data.error);
-            }
-        }
-        // Portfolio Value Chart
-        new Chart(document.getElementById('portfolioChart'), {
+        // 1) Portfolio Chart
+        const ctxPortfolio = document.getElementById('portfolioChart').getContext('2d');
+        portfolioChart = new Chart(ctxPortfolio, {
             type: 'line',
             data: {
-                labels: <?= json_encode($chartData['portfolioHistory']['labels']) ?>,
-                datasets: [{
-                    label: 'Current Value',
-                    data: <?= json_encode($chartData['portfolioHistory']['values']['current']) ?>,
-                    borderColor: 'rgb(59, 130, 246)',
-                    tension: 0.1
-                }, {
-                    label: 'Invested Value',
-                    data: <?= json_encode($chartData['portfolioHistory']['values']['invested']) ?>,
-                    borderColor: 'rgb(156, 163, 175)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
+                labels: chartData.portfolioHistory.labels,
+                datasets: [
+                    {
+                        label: 'Current Value',
+                        data: chartData.portfolioHistory.values.current,
+                        borderColor: 'blue',
+                        backgroundColor: 'transparent',
+                    },
+                    {
+                        label: 'Invested Value',
+                        data: chartData.portfolioHistory.values.invested,
+                        borderColor: 'gray',
+                        backgroundColor: 'transparent',
+                    }
+                ]
             }
         });
 
-        // Distribution Chart
-        new Chart(document.getElementById('distributionChart'), {
-            type: 'doughnut',
-            data: {
-                labels: <?= json_encode($chartData['distribution']['labels']) ?>,
-                datasets: [{
-                    data: <?= json_encode($chartData['distribution']['values']) ?>,
-                    backgroundColor: [
-                        'rgb(59, 130, 246)',
-                        'rgb(16, 185, 129)',
-                        'rgb(239, 68, 68)',
-                        'rgb(245, 158, 11)',
-                        'rgb(168, 85, 247)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
+        // 2) Distribution Chart
+        const ctxDistribution = document.getElementById('distributionChart').getContext('2d');
+        // Check if we have "No Data"
+        if (chartData.distribution.labels.length === 1 && chartData.distribution.labels[0] === 'No Data') {
+            console.log('No distribution data available.');
+        } else {
+            distributionChart = new Chart(ctxDistribution, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.distribution.labels,
+                    datasets: [{
+                        data: chartData.distribution.values,
+                        backgroundColor: [
+                            '#4F46E5',
+                            '#16A34A',
+                            '#F59E0B',
+                            '#EF4444',
+                            '#10B981',
+                            '#E11D48'
+                        ]
+                    }]
+                }
+            });
+        }
 
-        // Performance Chart
-        new Chart(document.getElementById('performanceChart'), {
+        // 3) Performance Chart
+        const ctxPerformance = document.getElementById('performanceChart').getContext('2d');
+        performanceChart = new Chart(ctxPerformance, {
             type: 'bar',
             data: {
-                labels: <?= json_encode($chartData['monthlyPerformance']['labels']) ?>,
-                datasets: [{
-                    label: 'Profit/Loss',
-                    data: <?= json_encode($chartData['monthlyPerformance']['values']) ?>,
-                    backgroundColor: function(context) {
-                        return context.raw >= 0 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)';
+                labels: chartData.monthlyPerformance.labels,
+                datasets: [
+                    {
+                        label: 'Profit/Loss',
+                        data: chartData.monthlyPerformance.values,
+                        backgroundColor: chartData.monthlyPerformance.values.map(v =>
+                            v >= 0 ? 'green' : 'red'
+                        )
                     }
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
+                ]
             }
         });
-    </script>
+    }
 
-<?php require('partials/footer.php') ?>
+    function updateStatistics(winLossRatio, tradeMetrics) {
+        document.getElementById('winRate').textContent =
+            `${winLossRatio.wins} Wins / ${winLossRatio.losses} Losses`;
+
+        document.getElementById('profitFactor').textContent =
+            tradeMetrics.profitFactor;
+
+        document.getElementById('averageProfit').textContent =
+            `$${tradeMetrics.averageProfitPerTrade}`;
+
+        document.getElementById('averageLoss').textContent =
+            `$${tradeMetrics.averageLossPerTrade}`;
+    }
+
+    // Event listeners
+    document.getElementById('portfolioPeriod').addEventListener('change', (e) => {
+        fetchAnalyticsData(e.target.value, document.getElementById('performancePeriod').value);
+    });
+    document.getElementById('performancePeriod').addEventListener('change', (e) => {
+        fetchAnalyticsData(document.getElementById('portfolioPeriod').value, e.target.value);
+    });
+
+    // On page load, fetch monthly-monthly
+    fetchAnalyticsData('monthly', 'monthly');
+</script>
+
+</body>
+</html>

@@ -9,6 +9,7 @@ checkAuth();
 header('Content-Type: application/json');
 
 try {
+    // Load configuration and initialize dependencies
     $config = require __DIR__ . '/../config/config.php';
     $db = new Database($config['database']);
     $symbol = new Symbol($db);
@@ -17,8 +18,15 @@ try {
     // Get current timestamp before updates
     $startTime = microtime(true);
 
-    //
-    $investments = $investment->getAllOpenInvestments($_SESSION['user_id'], true);
+
+    // Fetch all open investments for the authenticated user
+    $userId = $_SESSION['user_id'] ?? null;
+    if (!$userId) {
+        throw new Exception("User ID is missing in the session.");
+    }
+
+    // Fetch all open investments for the authenticated user
+    $investments = $investment->getAllOpenInvestments($userId, true);
 
     // Calculate totals
     $totalInvestment = 0;
@@ -32,9 +40,13 @@ try {
             $totalProfitLoss += $inv['profit_loss'];
         }
         // Format numbers for display
-        $inv['formatted_profit_loss'] = number_format($inv['profit_loss'], 2);
-        $inv['formatted_current_price'] = number_format($inv['current_price'], 2);
+        $inv['formatted_profit_loss'] = number_format($inv['profit_loss'], 3);
+        $inv['formatted_current_price'] = number_format($inv['current_price'], 4);
     }
+
+    // Calculate profit/loss percentage
+    $profitLossPercentage = $totalInvestment > 0 ?
+        ($totalProfitLoss / $totalInvestment) * 100 : 0;
 
     // Calculate execution time
     $executionTime = round((microtime(true) - $startTime) * 1000, 2);
@@ -47,8 +59,7 @@ try {
                 'total_investment' => $totalInvestment,
                 'total_value' => $totalValue,
                 'total_profit_loss' => $totalProfitLoss,
-                'profit_loss_percentage' => $totalInvestment > 0 ?
-                    ($totalProfitLoss / $totalInvestment) * 100 : 0
+                'profit_loss_percentage' => $profitLossPercentage
             ]
         ],
         'timestamp' => date('Y-m-d H:i:s'),
@@ -56,6 +67,7 @@ try {
     ]);
 } catch (Exception $e) {
     error_log("[API] Price update error: " . $e->getMessage());
+
     http_response_code(500);
     echo json_encode([
         'success' => false,

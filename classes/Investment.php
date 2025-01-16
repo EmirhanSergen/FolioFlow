@@ -13,9 +13,9 @@ class Investment {
         try {
             $query = "
                 SELECT 
-                    i.*,
-                    s.current_price,
-                    s.last_updated,
+                    i.*, -- Fetches all columns from the `investments` table for each investment.
+                    s.current_price, -- Retrieves the current price of the symbol from the `symbols` table.
+                    s.last_updated, -- Retrieves the last updated timestamp of the symbol's price.
                     CASE 
                         WHEN s.current_price IS NOT NULL 
                         THEN (s.current_price - i.buy_price) * i.amount 
@@ -40,13 +40,11 @@ class Investment {
             // Get unique symbols for  update
             $symbols = array_unique(array_column($investments, 'name'));
 
-            // Update all prices in one operation if forced or any need updating
-            $needsUpdate = $forceUpdate;
-            if ($needsUpdate && !empty($symbols)) {
-                // Update all prices in one batch
-                $this->symbol->updatePrices($symbols, $forceUpdate);
+            // If updates are forced or needed, refresh prices
+            if ($forceUpdate && !empty($symbols)) {
+                $this->symbol->updatePrices($symbols); // Batch update prices
 
-                // Fetch fresh data
+                // Re-fetch investments after the price update
                 $stmt->execute([$userId]);
                 $investments = $stmt->fetchAll();
             }

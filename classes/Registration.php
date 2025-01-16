@@ -1,5 +1,4 @@
 <?php
-// classes/Registration.php
 class Registration {
     private $db;
     private $errors = [];
@@ -19,6 +18,7 @@ class Registration {
         // Validate input
         $this->validateInput($username, $email, $password, $confirm_password);
 
+        // Can be added email verification with PHPMailer
         if (empty($this->errors)) {
             return $this->createUser($username, $email, $password);
         }

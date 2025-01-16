@@ -1,27 +1,25 @@
 <?php
 
-function checkAuth() {
-    // If no session exists, start one
+function startSession() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
+}
 
-    // If user is not logged in, redirect to login
+function checkAuth() {
+    startSession();
+
     if (!isset($_SESSION['user_id'])) {
-        header('Location: /FolioFlow/login');
+        header('Location: ' . getenv('LOGIN_URL')); // Redirect to login
         exit();
     }
 }
 
 function checkGuest() {
-    // If no session exists, start one
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    startSession();
 
-    // If user is already logged in, redirect to dashboard
     if (isset($_SESSION['user_id'])) {
-        header('Location: /FolioFlow/dashboard');
+        header('Location: ' . getenv('DASHBOARD_URL')); // Redirect to dashboard
         exit();
     }
 }

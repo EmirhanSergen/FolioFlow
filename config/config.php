@@ -4,12 +4,14 @@
 if (file_exists(__DIR__ . '/../.env')) {
     $envVars = parse_ini_file(__DIR__ . '/../.env');
     foreach ($envVars as $key => $value) {
-        putenv("$key=$value");
-        $_ENV[$key] = $value;
+        putenv("$key=$value"); // Make variable globally available
+        $_ENV[$key] = $value; // Store variable in the $_ENV superglobal
     }
 }
 
+// Main configuration array returned to the app
 return [
+    // Database configuration settings
     'database' => [
         'host' => getenv('DB_HOST') ?: 'localhost',
         'port' => getenv('DB_PORT') ?: '3306',
@@ -18,6 +20,7 @@ return [
         'username' => getenv('DB_USERNAME') ?: 'root',
         'password' => getenv('DB_PASSWORD') ?: '',
     ],
+    // API-related settings
     'api' => [
         'binance' => [
             'endpoint' => 'https://api.binance.com/api/v3',
@@ -25,22 +28,9 @@ return [
             'user_agent' => 'FolioFlow/1.0'
         ]
     ],
+    // Security settings
     'security' => [
-        'session_lifetime' => 3600,
-        'password_algo' => PASSWORD_ARGON2ID,
+        'session_lifetime' => 3600, // Session lifetime in seconds (1 hour)
+        'password_algo' => PASSWORD_ARGON2ID, // Password hashing algorithm
     ]
 ];
-
-return [
-    'database' => [
-        'host' => 'localhost',
-        'port' => '3306',
-        'dbname' => 'folioflow',
-        'charset' => 'utf8mb4',
-    ],
-    'api_keys' => [
-        'alpha_vantage' => '8RG21IIGE5XFVWBX'  // Your API key
-]
-];
-
-// First N0SQTBLHZCBTVQ4I

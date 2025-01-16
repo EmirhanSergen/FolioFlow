@@ -1,7 +1,7 @@
 <?php
 class Symbol {
     private $db;
-    private const UPDATE_INTERVAL = 1800; // 30 minutes in seconds
+    private const UPDATE_INTERVAL = 1800; // How often price updates are needed (30 minutes)
     private const BINANCE_API_ENDPOINT = "https://api.binance.com/api/v3";
     private $logFile;
 
@@ -32,7 +32,7 @@ class Symbol {
                     VALUES (?, ?, ?)
                 ");
 
-                $type = strpos($symbol, 'USDT') !== false ? 'crypto' : 'stock';
+                $type = $this->isCryptoSymbolValid($symbol) ? 'crypto' : 'stock';
                 $name = $type === 'crypto' ? str_replace('USDT', '', $symbol) : $symbol;
 
                 $result = $stmt->execute([$symbol, $name, $type]);
@@ -57,11 +57,13 @@ class Symbol {
             $stmt->execute([$symbol]);
             $result = $stmt->fetch();
 
+            // $result is false (symbol not found in the database) or last_updated is null or empty
             if (!$result || !$result['last_updated']) {
                 return true;
             }
 
             $lastUpdate = strtotime($result['last_updated']);
+            // Control is the update up to date based on our UPDATE_INTERVAL
             $needsUpdate = (time() - $lastUpdate) > self::UPDATE_INTERVAL;
 
             if ($needsUpdate) {
@@ -92,14 +94,16 @@ class Symbol {
             $checkStmt->execute([$symbol]);
             $symbolData = $checkStmt->fetch();
 
+            // If symbol doesn't exist firstly add it to database
             if (!$symbolData) {
                 $this->addSymbol($symbol);
                 $symbolData = ['type' => strpos($symbol, 'USDT') !== false ? 'crypto' : 'stock'];
             }
 
+            // At the current I only provide real time price update on cryptos
             // Only proceed if it's a crypto symbol
-            if ($symbolData['type'] !== 'crypto') {
-                $this->log("Non-crypto symbol: $symbol. Skipping update.");
+            if (!$this->isCryptoSymbolValid($symbol)) {
+                $this->log("Invalid or non-crypto symbol: $symbol. Skipping update.");
                 return false;
             }
 
@@ -189,24 +193,25 @@ class Symbol {
         try {
             $this->log("Starting batch price update for symbols: " . implode(', ', $symbols));
 
-            // Get all prices in one request
+            // Response includes all symbols tracked by Binance
             $url = self::BINANCE_API_ENDPOINT . "/ticker/price";
 
             $headers = [
-                'User-Agent: Mozilla/5.0 (compatible; FolioFlow/1.0;)',
-                'Accept: application/json'
+                'User-Agent: Mozilla/5.0 (compatible; FolioFlow/1.0;)', // Identifies the client making the request
+                'Accept: application/json' // Specifies the expected response format as JSON
             ];
 
+            // cURL PHP Library for sending HTTP requests
             $ch = curl_init();
             curl_setopt_array($ch, [
-                CURLOPT_URL => $url,
-                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_URL => $url, // api endpoint
+                CURLOPT_RETURNTRANSFER => true, // ensuring the response is returned as a string
                 CURLOPT_TIMEOUT => 30,
                 CURLOPT_HTTPHEADER => $headers,
-                CURLOPT_SSL_VERIFYPEER => true
+                CURLOPT_SSL_VERIFYPEER => true  // verifying SSL certificate
             ]);
 
-            $response = curl_exec($ch);
+            $response = curl_exec($ch); // execution and response
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
 
@@ -230,13 +235,16 @@ class Symbol {
                 return false;
             }
 
-            // Create price lookup array
+            // A key-value pair array where the symbol is the key and its price is the value.
             $priceMap = [];
+            // Quickly look up a symbols which we need
             foreach ($allPrices as $price) {
                 $priceMap[$price['symbol']] = $price['price'];
             }
 
             // Update database in batch
+            // Starts a database transaction to group multiple updates into one atomic operation.
+            //
             $this->db->beginTransaction();
             try {
                 $stmt = $this->db->prepare("
@@ -248,6 +256,7 @@ class Symbol {
 
                 $updatedAny = false;
                 foreach ($symbols as $symbol) {
+                    // Is there price of particular symbol and should forced or is it need to update
                     if (isset($priceMap[$symbol]) && ($forceUpdate || $this->needsPriceUpdate($symbol))) {
                         $stmt->execute([$priceMap[$symbol], $symbol]);
                         $this->log("Updated price for $symbol: " . $priceMap[$symbol]);
@@ -332,6 +341,7 @@ class Symbol {
         }
     }
 
+    // Can be implemented when user need to choose crypto
     public function getAvailableCryptos(): array {
         try {
             $stmt = $this->db->prepare("
