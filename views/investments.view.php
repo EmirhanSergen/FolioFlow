@@ -269,11 +269,24 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-gray-500 sm:text-sm">$</span>
                             </div>
-                            <input type="number"
-                                   id="modalSellPrice"
-                                   step="0.01"
-                                   class="pl-7 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 h-10"
-                                   required>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                </div>
+                                <input
+                                        type="number"
+                                        id="modalSellPrice"
+                                        step="0.01"
+                                        class="pl-7 block w-full border-2 border-gray-300 rounded-md shadow-sm focus:ring-0 focus:outline-none h-12 bg-white transition-colors duration-200"
+                                        oninput="updateSellPriceAppearance(this.value, currentBuyPrice)"
+                                />
+                                <button
+                                        type="button"
+                                        onclick="useCurrentPrice()"
+                                        class="absolute inset-y-0 right-0 px-3 flex items-center bg-gray-50 hover:bg-gray-100 border-l border-gray-300 rounded-r-md text-sm text-blue-600 hover:text-blue-800">
+                                    Use Current
+                                </button>
+                            </div>
                             <button type="button"
                                     onclick="useCurrentPrice()"
                                     class="absolute inset-y-0 right-0 px-3 flex items-center bg-gray-50 hover:bg-gray-100 border-l border-gray-300 rounded-r-md text-sm text-blue-600 hover:text-blue-800">

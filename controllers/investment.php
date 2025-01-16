@@ -85,6 +85,11 @@ try {
     if (!$investmentData) {
         $errors[] = "Investment not found";
     } else {
+        if ($symbol->needsPriceUpdate($investmentData['name'])) {
+            $symbol->updatePrice($investmentData['name']);
+            // Refresh data after update
+            $investmentData = $investment->getInvestmentByUserId($id, $_SESSION['user_id']);
+        }
         // Calculate profit/loss
         $profitLoss = 0;
         $profitLossPercent = 0;

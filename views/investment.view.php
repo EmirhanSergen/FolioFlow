@@ -151,7 +151,9 @@
                                 </div>
 
                                 <div class="flex justify-end">
-                                    <button class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm" type="submit">
+                                    <button type="button"
+                                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm"
+                                            onclick="showConfirmationModal('update')">
                                         Update Investment
                                     </button>
                                 </div>
@@ -174,23 +176,31 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <span class="text-gray-500 sm:text-sm">$</span>
                                         </div>
-                                        <input class="pl-7 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                               type="number"
-                                               step="0.01"
-                                               id="sell_price"
-                                               name="sell_price"
-                                               value="<?= number_format($investmentData['current_price'] ?? 0, 2, '.', '') ?>"
-                                               required>
+                                        <input
+                                                id="sell_price"
+                                                name="sell_price"
+                                                type="number"
+                                                step="0.01"
+                                                class="pl-7 block w-full border-2 border-gray-300 rounded-md shadow-sm focus:ring-0 focus:outline-none h-12 bg-white transition-colors duration-200"
+                                                value="<?= number_format($investmentData['current_price'] ?? 0, 2, '.', '') ?>"
+                                                required
+                                                oninput="updateSellPriceAppearance(this.value, <?= $investmentData['buy_price'] ?>)">
+                                        <button type="button"
+                                                onclick="useCurrentPrice(<?= $investmentData['current_price'] ?>)"
+                                                class="absolute inset-y-0 right-0 px-3 flex items-center bg-gray-50 hover:bg-gray-100 border-l border-gray-300 rounded-r-md text-sm text-blue-600 hover:text-blue-800">
+                                            Use Current
+                                        </button>
                                     </div>
+                                    <div id="profitLossDisplay" class="text-right text-sm mt-2"></div>
                                 </div>
 
                                 <div class="flex justify-between items-center">
                                     <div class="text-sm text-gray-500">
                                         Current Price: $<?= number_format($investmentData['current_price'] ?? 0, 2, '.', ',') ?>
                                     </div>
-                                    <button class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm"
-                                            type="submit"
-                                            onclick="return confirm('Are you sure you want to close this investment? This action cannot be undone.')">
+                                    <button type="button"
+                                            class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md shadow-sm"
+                                            onclick="showConfirmationModal('close')">
                                         Close Investment
                                     </button>
                                 </div>
@@ -222,9 +232,25 @@
                 <?php endif; ?>
             <?php endif; ?>
         </div>
+        <div id="confirmationModal" class="fixed inset-0 bg-gray-500 bg-opacity-50 hidden z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+                <h3 id="modalTitle" class="text-lg font-semibold text-gray-900 mb-4">Confirm Action</h3>
+                <p id="modalText" class="text-sm text-gray-600 mb-6"></p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelButton" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                            onclick="hideConfirmationModal()">
+                        Cancel
+                    </button>
+                    <button id="confirmButton" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
+        // Function to refresh the price (unchanged)
         async function refreshPrice() {
             try {
                 const response = await fetch('/FolioFlow/api/update-prices.php', {
@@ -243,6 +269,74 @@
                 alert('Error updating price. Please try again.');
             }
         }
+
+        // Function to update the sell price appearance and profit/loss dynamically
+        function updateSellPriceAppearance(sellPrice, buyPrice) {
+            const input = document.getElementById('sell_price');
+            const profitLossDisplay = document.getElementById('profitLossDisplay');
+            sellPrice = parseFloat(sellPrice) || 0;
+
+            // Reset styles
+            input.classList.remove('border-emerald-600', 'border-red-600', 'bg-emerald-50', 'bg-red-50');
+            profitLossDisplay.classList.remove('text-emerald-600', 'text-red-600');
+
+            // Update styles based on profit/loss
+            if (sellPrice > buyPrice) {
+                input.classList.add('border-emerald-600', 'bg-emerald-50');
+                profitLossDisplay.classList.add('text-emerald-600');
+            } else {
+                input.classList.add('border-red-600', 'bg-red-50');
+                profitLossDisplay.classList.add('text-red-600');
+            }
+
+            // Calculate and display profit/loss
+            const profitLoss = (sellPrice - buyPrice) * <?= $investmentData['amount'] ?>;
+            profitLossDisplay.textContent = `Profit/Loss: ${profitLoss >= 0 ? '+' : ''}$${profitLoss.toFixed(2)}`;
+        }
+
+        // Function to use the current price for sell price
+        function useCurrentPrice(currentPrice) {
+            const input = document.getElementById('sell_price');
+            input.value = currentPrice.toFixed(2);
+            updateSellPriceAppearance(currentPrice, <?= $investmentData['buy_price'] ?>);
+        }
+
+        // Function to show and configure the confirmation modal
+        function showConfirmationModal(actionType) {
+            const modal = document.getElementById('confirmationModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalText = document.getElementById('modalText');
+            const confirmButton = document.getElementById('confirmButton');
+
+            // Set modal content based on action type
+            if (actionType === 'update') {
+                modalTitle.textContent = 'Confirm Update';
+                modalText.textContent = 'Are you sure you want to update this investment?';
+                confirmButton.textContent = 'Update';
+                confirmButton.className = 'px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700';
+                confirmButton.onclick = () => {
+                    document.querySelector('form[action="update"]').submit();
+                };
+            } else if (actionType === 'close') {
+                modalTitle.textContent = 'Confirm Close';
+                modalText.textContent = 'Are you sure you want to close this investment? This action cannot be undone.';
+                confirmButton.textContent = 'Close';
+                confirmButton.className = 'px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700';
+                confirmButton.onclick = () => {
+                    document.querySelector('form[action="close"]').submit();
+                };
+            }
+
+            // Show the modal
+            modal.classList.remove('hidden');
+        }
+
+        // Function to hide the confirmation modal
+        function hideConfirmationModal() {
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.add('hidden');
+        }
+
     </script>
 
 <?php require 'partials/footer.php'; ?>
