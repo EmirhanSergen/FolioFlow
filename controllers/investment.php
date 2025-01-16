@@ -16,7 +16,7 @@ $db = new Database($config['database']);
 $symbol = new Symbol($db);
 $investment = new Investment($db, $symbol);
 
-// Get investment ID
+// Get the investment ID from the URL query string
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
 if (!$id) {
@@ -25,7 +25,7 @@ if (!$id) {
     exit();
 }
 
-// Handle form submissions
+// Handle form submissions (e.g., update or close actions)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($investment->closeInvestment($id, $sellPrice)) {
                     $_SESSION['success_message'] = "Investment closed successfully!";
-                    header('Location: /FolioFlow/dashboard'); // Changed from /investments to /dashboard
+                    header('Location: /FolioFlow/investments'); // Changed from /investments to /dashboard
                     exit();
                 } else {
                     throw new Exception("Failed to close investment");
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Get investment data
 try {
-    $investmentData = $investment->getInvestmentById($id, $_SESSION['user_id']);
+    $investmentData = $investment->getInvestmentByUserId($id, $_SESSION['user_id']);
     if (!$investmentData) {
         $errors[] = "Investment not found";
     } else {
@@ -94,6 +94,7 @@ try {
             $profitLossPercent = ($investmentData['buy_price'] > 0) ?
                 ($profitLoss / ($investmentData['buy_price'] * $investmentData['amount'])) * 100 : 0;
         }
+        // Add calculated values to the investment data
         $investmentData['profit_loss'] = $profitLoss;
         $investmentData['profit_loss_percent'] = $profitLossPercent;
     }

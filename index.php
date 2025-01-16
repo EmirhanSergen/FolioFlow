@@ -1,5 +1,5 @@
 <?php
-// Create logs directory if it doesn't exist
+date_default_timezone_set('Asia/Istanbul');
 $logDir = __DIR__ . '/logs';
 if (!file_exists($logDir)) {
     mkdir($logDir, 0777, true);

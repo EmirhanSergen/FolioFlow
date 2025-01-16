@@ -55,40 +55,50 @@
             </div>
 
             <!-- Alerts -->
+            <!-- Success Message -->
             <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="rounded-md bg-green-50 p-4 mb-6">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
+                <div id="successAlert" class="rounded-md bg-green-50 p-4 mb-6 transition-opacity duration-1000 ease-in-out">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center">
                             <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-green-800">
+                            <p class="ml-3 text-sm font-medium text-green-800">
                                 <?= htmlspecialchars($_SESSION['success_message']) ?>
                             </p>
                         </div>
+                        <button onclick="closeAlert('successAlert')" class="text-green-500 hover:text-green-700 focus:outline-none">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 <?php unset($_SESSION['success_message']); ?>
             <?php endif; ?>
 
+            <!-- Error Messages -->
             <?php if (!empty($errors)): ?>
-                <div class="rounded-md bg-red-50 p-4 mb-6">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-red-800">There were errors with your submission:</h3>
+                <div id="errorAlert" class="rounded-md bg-red-50 p-4 mb-6 transition-opacity duration-1000 ease-in-out">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="flex items-center">
+                                <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <h3 class="ml-3 text-sm font-medium text-red-800">There were errors with your submission:</h3>
+                            </div>
                             <ul class="mt-2 text-sm text-red-700">
                                 <?php foreach ($errors as $error): ?>
                                     <li><?= htmlspecialchars($error) ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>
+                        <button onclick="closeAlert('errorAlert')" class="text-red-500 hover:text-red-700 focus:outline-none">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
             <?php endif; ?>
@@ -118,32 +128,32 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Buy Price</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Current Price</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Profit/Loss</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th scope="col" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                <th scope="col" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buy Price</th>
+                                <th scope="col" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Price</th>
+                                <th scope="col" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profit/Loss</th>
+                                <th scope="col" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                                <th scope="col" class="px-6 py-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($investments as $investment): ?>
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                <tr class="hover:bg-gray-100">
+                                    <td class="px-6 py-6 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">
                                             <?= htmlspecialchars($investment['name']) ?>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
-                                        <div class="text-sm text-gray-900">
+                                    <td class="px-6 py-6 whitespace-nowrap text-left">
+                                        <div class="text-sm font-medium text-gray-900">
                                             <?= number_format($investment['amount'], 2) ?>
                                             <?php if (!empty($investment['total_added_amount'])): ?>
-                                                <span class="text-xs text-gray-500">(+<?= number_format($investment['total_added_amount'], 2) ?>)</span>
+                                                <span class="text-sm text-gray-500">(+<?= number_format($investment['total_added_amount'], 2) ?>)</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <td class="px-6 py-6 whitespace-nowrap text-left">
                                         <div class="text-sm text-gray-900">
                                             $<?= number_format($investment['buy_price'], 2) ?>
                                             <?php if (!empty($investment['is_averaged'])): ?>
@@ -151,7 +161,7 @@
                                             <?php endif; ?>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <td class="px-6 py-6 whitespace-nowrap text-left">
                                         <?php if ($investment['current_price']): ?>
                                             <div class="text-sm text-gray-900">
                                                 $<?= number_format($investment['current_price'], 2) ?>
@@ -162,11 +172,11 @@
                                             </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <td class="px-6 py-6 whitespace-nowrap text-left">
                                         <?php if ($investment['current_price']): ?>
                                             <div class="text-sm <?= $investment['profit_loss'] >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
                                                 $<?= number_format($investment['profit_loss'], 2) ?>
-                                                (<?= number_format(($investment['profit_loss'] / ($investment['buy_price'] * $investment['amount'])) * 100, 5) ?>%)
+                                                (<?= number_format(($investment['profit_loss'] / ($investment['buy_price'] * $investment['amount'])) * 100, 2) ?>%)
                                             </div>
                                         <?php else: ?>
                                             <div class="text-sm text-gray-500">
@@ -174,7 +184,7 @@
                                             </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-6 whitespace-nowrap">
                                         <div class="text-sm text-gray-500">
                                             <?php if ($investment['last_updated']): ?>
                                                 <?= date('H:i', strtotime($investment['last_updated'])) ?>
@@ -183,7 +193,7 @@
                                             <?php endif; ?>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td class="px-6 py-6 whitespace-nowrap text-left text-sm font-medium">
                                         <a href="/FolioFlow/investment?id=<?= $investment['id'] ?>"
                                            class="text-blue-900 hover:text-blue-700 mr-4">Edit</a>
                                         <button onclick="showCloseModal(
@@ -205,7 +215,6 @@
                 </div>
             <?php endif; ?>
         </div>
-        <!-- Add this modal HTML at the end of your main content, before the closing </main> tag -->
         <div id="closeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div class="relative top-20 mx-auto p-5 border w-[480px] shadow-lg rounded-md bg-white">
                 <!-- Loading Overlay -->
@@ -404,5 +413,34 @@
                 closeModal();
             }
         });
+        document.addEventListener("DOMContentLoaded", function () {
+            // Automatically hide success alert after 3 seconds
+            const successAlert = document.getElementById("successAlert");
+            if (successAlert) {
+                setTimeout(() => {
+                    successAlert.style.opacity = "0"; // Fade out
+                    setTimeout(() => successAlert.remove(), 1000); // Remove from DOM
+                }, 3000); // 3 seconds
+            }
+
+            // Automatically hide error alert after 3 seconds (optional)
+            const errorAlert = document.getElementById("errorAlert");
+            if (errorAlert) {
+                setTimeout(() => {
+                    errorAlert.style.opacity = "0"; // Fade out
+                    setTimeout(() => errorAlert.remove(), 1000); // Remove from DOM
+                }, 3000); // 3 seconds
+            }
+        });
+
+        // Function to close alerts manually
+        function closeAlert(alertId) {
+            const alertElement = document.getElementById(alertId);
+            if (alertElement) {
+                alertElement.style.opacity = "0"; // Fade out
+                setTimeout(() => alertElement.remove(), 1000); // Remove from DOM
+            }
+        }
+
     </script>
 <?php require('partials/footer.php') ?>

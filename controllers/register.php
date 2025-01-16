@@ -10,7 +10,13 @@ $db = new Database($config['database']);
 $registration = new Registration($db);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $result = $registration->handleRegistration($_POST);
+
+    try {
+        $result = $registration->handleRegistration($_POST);
+    } catch (Exception $e) {
+        $errors['general'] = "An unexpected error occurred. Please try again.";
+        error_log($e->getMessage());
+    }
 
     if (isset($result['success'])) {
         header('Location: /FolioFlow/login');
