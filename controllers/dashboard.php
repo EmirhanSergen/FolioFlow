@@ -15,7 +15,7 @@ try {
     $symbol = new Symbol($db);
     $investment = new Investment($db, $symbol);
 
-    // Get core metrics
+    // Fetch core dashboard metrics
     $activeInvestmentCount = $dashboard->getActiveInvestmentCount($_SESSION['user_id']);
     $investmentData = $dashboard->calculateTotalInvestmentByUserId($_SESSION['user_id']);
     $totalProfitLoss = $dashboard->calculateTotalProfitByUserId($_SESSION['user_id']);
@@ -31,9 +31,6 @@ try {
     // Calculate performance metrics
     $bestReturn = $bestPerforming ? (($bestPerforming['current_price'] - $bestPerforming['buy_price']) / $bestPerforming['buy_price'] * 100) : 0;
     $worstReturn = $worstPerforming ? (($worstPerforming['current_price'] - $worstPerforming['buy_price']) / $worstPerforming['buy_price'] * 100) : 0;
-
-    // Calculate average investment size
-    $avgInvestmentSize = $activeInvestmentCount > 0 ? $totalInitialInvestment / $activeInvestmentCount : 0;
 
 } catch(Exception $e) {
     error_log("Dashboard Error: " . $e->getMessage());

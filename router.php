@@ -18,8 +18,6 @@ $routes = [
 
 // Function to route a given URI to the corresponding controller
 function routeToController($uri, $routes){
-    // Remove query strings from URI
-    $uri = strtok($uri, '?');
 
     if (array_key_exists($uri, $routes)) {
         require $routes[$uri];

@@ -8,135 +8,160 @@ class Investment {
         $this->symbol = $symbol;
     }
 
-    // Get all active crypto investments with averaging info
-    public function getAllOpenInvestments($userId, $forceUpdate = false) {
-        try {
-            $query = "
+    // Fetches all active investments for a user from the database.
+    // Includes details like profit/loss and other calculated fields.
+    private function fetchInvestments($userId) {
+        $query = "
                 SELECT 
-                    i.*, -- Fetches all columns from the `investments` table for each investment.
-                    s.current_price, -- Retrieves the current price of the symbol from the `symbols` table.
-                    s.last_updated, -- Retrieves the last updated timestamp of the symbol's price.
-                    CASE 
-                        WHEN s.current_price IS NOT NULL 
-                        THEN (s.current_price - i.buy_price) * i.amount 
-                        ELSE 0 
-                    END as profit_loss,
-                    (SELECT COUNT(*) > 0 
-                     FROM investment_logs 
-                     WHERE investment_id = i.id) as is_averaged,
-                    (SELECT SUM(added_amount) 
-                     FROM investment_logs 
-                     WHERE investment_id = i.id) as total_added_amount
+                i.*, 
+                s.current_price, 
+                s.last_updated, 
+                CASE 
+                    WHEN s.current_price IS NOT NULL 
+                    THEN (s.current_price - i.buy_price) * i.amount 
+                    ELSE 0 
+                END as profit_loss,
+                COALESCE(logs.is_averaged, 0) as is_averaged,
+                COALESCE(logs.total_added_amount, 0) as total_added_amount
                 FROM investments i
                 LEFT JOIN symbols s ON i.name = s.symbol
+                LEFT JOIN (
+                    SELECT 
+                        investment_id, 
+                        COUNT(*) > 0 as is_averaged, 
+                        SUM(added_amount) as total_added_amount
+                    FROM investment_logs
+                    GROUP BY investment_id
+                ) logs ON i.id = logs.investment_id
                 WHERE i.user_id = ? 
-                AND i.status = 'active'
+                AND i.status = 'active';
             ";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
+    }
 
-            $stmt = $this->db->prepare($query);
-            $stmt->execute([$userId]);
-            $investments = $stmt->fetchAll();
-
-            // Get unique symbols for  update
-            $symbols = array_unique(array_column($investments, 'name'));
-
-            // If updates are forced or needed, refresh prices
-            if ($forceUpdate && !empty($symbols)) {
-                $this->symbol->updatePrices($symbols); // Batch update prices
-
-                // Re-fetch investments after the price update
-                $stmt->execute([$userId]);
-                $investments = $stmt->fetchAll();
-            }
-
-            return $investments;
-        } catch (Exception $e) {
-            error_log("[Investment] Error getting investments: " . $e->getMessage());
-            throw $e;
+    // Updates the prices of the provided symbols if forceUpdate is true or they need updating.
+    private function updatePricesIfNeeded($symbols, $forceUpdate) {
+        if ($forceUpdate && !empty($symbols)) {
+            $this->symbol->updatePrices($symbols,$forceUpdate);
         }
     }
 
+    // Re-fetches the investments after updates to ensure fresh and accurate data.
+    private function refetchInvestments($userId) {
+        return $this->fetchInvestments($userId);
+    }
+
+    // 1. Fetches investments for the user.
+    // 2. Updates symbol prices if necessary.
+    // 3. Returns the final updated list of investments.
+    public function getAllOpenInvestments($userId, $forceUpdate = false) {
+        $investments = $this->fetchInvestments($userId);
+        $symbols = array_unique(array_column($investments, 'name'));
+
+        $this->updatePricesIfNeeded($symbols, $forceUpdate);
+
+        if ($forceUpdate) {
+            $investments = $this->refetchInvestments($userId);
+        }
+        return $investments;
+    }
+
+    private function updateExistingInvestment($existingInvestment, $data, $userId) {
+        // Calculate the new average buy price
+        $newAverageBuyPrice = $this->calculateAverageBuyPrice(
+            $existingInvestment['amount'],
+            $existingInvestment['buy_price'],
+            $data['amount'],
+            $data['buy_price']
+        );
+
+        // Update the investment record
+        $updateStmt = $this->db->prepare("
+        UPDATE investments 
+        SET amount = amount + ?, buy_price = ? 
+        WHERE id = ?
+    ");
+        $updateStmt->execute([
+            $data['amount'],
+            $newAverageBuyPrice,
+            $existingInvestment['id']
+        ]);
+
+        // Log the investment update
+        $this->logInvestmentUpdate($existingInvestment['id'], [
+            'previous_amount' => $existingInvestment['amount'],
+            'added_amount' => $data['amount'],
+            'previous_buy_price' => $existingInvestment['buy_price'],
+            'new_buy_price' => $newAverageBuyPrice,
+            'user_id' => $userId
+        ]);
+    }
+
+    private function addNewInvestment($data, $userId) {
+        // Add symbol if it doesn't exist (handled by addSymbol function)
+        $this->symbol->addSymbol($data['name']);
+
+        // Insert the new investment
+        $stmt = $this->db->prepare("
+        INSERT INTO investments (name, buy_price, amount, user_id, status) 
+        VALUES (?, ?, ?, ?, 'active')
+    ");
+        $stmt->execute([
+            $data['name'],
+            $data['buy_price'],
+            $data['amount'],
+            $userId
+        ]);
+    }
+
+    private function calculateAverageBuyPrice($existingAmount, $existingPrice, $newAmount, $newPrice) {
+        $totalCurrentValue = $existingAmount * $existingPrice;
+        $newValue = $newAmount * $newPrice;
+        $totalAmount = $existingAmount + $newAmount;
+        return ($totalCurrentValue + $newValue) / $totalAmount;
+    }
 
     public function addInvestment($data, $userId) {
         try {
-            // First check if user already has this investment
+            // Check if the user already has an active investment for the given symbol
             $stmt = $this->db->prepare("
-                SELECT id, amount, buy_price 
-                FROM investments 
-                WHERE user_id = ? 
-                AND name = ? 
-                AND status = 'active'
-            ");
+            SELECT id, amount, buy_price 
+            FROM investments 
+            WHERE user_id = ? 
+            AND name = ? 
+            AND status = 'active'
+        ");
             $stmt->execute([$userId, $data['name']]);
             $existingInvestment = $stmt->fetch();
 
             $this->db->beginTransaction();
 
             if ($existingInvestment) {
-                // Calculate new average buy price
-                $totalCurrentValue = $existingInvestment['amount'] * $existingInvestment['buy_price'];
-                $newValue = $data['amount'] * $data['buy_price'];
-                $totalAmount = $existingInvestment['amount'] + $data['amount'];
-                $newAverageBuyPrice = ($totalCurrentValue + $newValue) / $totalAmount;
-
                 // Update existing investment
-                $updateStmt = $this->db->prepare("
-                    UPDATE investments 
-                    SET amount = amount + ?,
-                        buy_price = ?
-                    WHERE id = ?
-                ");
-
-                $success = $updateStmt->execute([
-                    $data['amount'],
-                    $newAverageBuyPrice,
-                    $existingInvestment['id']
-                ]);
-
-                if ($success) {
-                    // Log the additional investment
-                    $this->logInvestmentUpdate($existingInvestment['id'], [
-                        'previous_amount' => $existingInvestment['amount'],
-                        'added_amount' => $data['amount'],
-                        'previous_buy_price' => $existingInvestment['buy_price'],
-                        'new_buy_price' => $newAverageBuyPrice,
-                        'user_id' => $userId
-                    ]);
-                }
+                $this->updateExistingInvestment($existingInvestment, $data, $userId);
             } else {
-                // Add to symbols table
-                $this->symbol->addSymbol($data['name']);
-
-                // Add investment
-                $stmt = $this->db->prepare("
-                    INSERT INTO investments (
-                        name, 
-                        buy_price, 
-                        amount, 
-                        user_id, 
-                        status
-                    ) VALUES (?, ?, ?, ?, 'active')
-                ");
-
-                $success = $stmt->execute([
-                    $data['name'],
-                    $data['buy_price'],
-                    $data['amount'],
-                    $userId
-                ]);
+                // Add new investment
+                $this->addNewInvestment($data, $userId);
             }
 
-            // Get initial price
+            // Ensure the symbol's price is up to date
             $this->symbol->updatePrice($data['name']);
 
             $this->db->commit();
             return [
                 'success' => true,
-                'is_update' => !empty($existingInvestment)
+                'is_update' => !empty($existingInvestment),
+                'investment' => $existingInvestment ?? [
+                        'name' => $data['name'],
+                        'amount' => $data['amount'],
+                        'buy_price' => $data['buy_price']
+                    ]
             ];
         } catch (Exception $e) {
             $this->db->rollBack();
-            error_log("[Investment] Error adding investment: " . $e->getMessage());
+            error_log("[Investment] Error adding investment for user $userId with symbol {$data['name']}: " . $e->getMessage());
             throw $e;
         }
     }
@@ -176,21 +201,25 @@ class Investment {
         }
     }
 
-    public function getInvestmentById($id, $userId) {
+    public function getInvestmentByUserId($id, $userId) {
         try {
             $stmt = $this->db->prepare("
                 SELECT 
                     i.*,
                     s.current_price,
                     s.last_updated,
-                    (SELECT COUNT(*) > 0 
-                     FROM investment_logs 
-                     WHERE investment_id = i.id) as is_averaged,
-                    (SELECT SUM(added_amount) 
-                     FROM investment_logs 
-                     WHERE investment_id = i.id) as total_added_amount
+                    COALESCE(logs.is_averaged, 0) as is_averaged,
+                    COALESCE(logs.total_added_amount, 0) as total_added_amount
                 FROM investments i
                 LEFT JOIN symbols s ON i.name = s.symbol
+                LEFT JOIN (
+                    SELECT 
+                        investment_id, 
+                        COUNT(*) > 0 as is_averaged, 
+                        SUM(added_amount) as total_added_amount
+                    FROM investment_logs
+                    GROUP BY investment_id
+                ) logs ON i.id = logs.investment_id
                 WHERE i.id = ? AND i.user_id = ?
             ");
 

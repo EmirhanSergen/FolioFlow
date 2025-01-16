@@ -4,8 +4,9 @@ require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Symbol.php';
 require_once __DIR__ . '/../classes/Investment.php';
 require_once __DIR__ . '/../middleware/Auth.php';
+require_once __DIR__ . '/../middleware/checkPrices.php';
 
-checkAuth();
+checkAuth(); // Middleware ensures only authenticated users can access this page
 
 $errors = [];
 $success = '';
@@ -13,8 +14,15 @@ $success = '';
 try {
     $config = require __DIR__ . '/../config/config.php';
     $db = new Database($config['database']);
+
     $symbol = new Symbol($db);
     $investment = new Investment($db, $symbol);
+
+    // Check and update prices before rendering the investments page
+    $userId = $_SESSION['user_id'] ?? null;
+    if ($userId) {
+        checkAndUpdatePrices($userId);
+    }
 
     // Test Binance API connection
     $apiTest = $symbol->testApiConnection();
@@ -51,6 +59,7 @@ try {
 } catch(Exception $e) {
     $errors[] = "Error fetching investments";
     error_log("[Investments] Error: " . $e->getMessage());
+
     $investments = [];
     $pageData = [
         'total_investment' => 0,
