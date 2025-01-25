@@ -12,11 +12,11 @@ $routes = [
     'add-investment' => 'controllers/add-investment.php', // Add new investment
     'closed-positions' => 'controllers/closed-positions.php', // View closed positions
     'close-position' => 'controllers/close-position.php', // Close an investment
-    'analytics' => 'controllers/analytics.php', // Analytics and reporting
+    'analytics' => 'controllers/analytics.php',
+    'documentation' => 'controllers/documentation.php', // Documentation page
 ];
 
-
-// Function to route a given URI to the corresponding controller
+// Function to route a given URI to the corresponding controller or view
 function routeToController($uri, $routes){
 
     if (array_key_exists($uri, $routes)) {
@@ -29,10 +29,10 @@ function routeToController($uri, $routes){
 
 // Error handling
 function abort($code = 404 ){
-    http_response_code(404);
-
+    http_response_code($code);
 
     require "views/error.view.php";
 
     die();
 }
+?>
