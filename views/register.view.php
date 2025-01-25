@@ -80,17 +80,17 @@
                                     onkeyup="checkPassword(this.value)"
                             >
                             <div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                <div id="length" class="flex items-center text-red-500">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="10" cy="10" r="8"/>
+                                    </svg>
+                                    Password Length
+                                </div>
                                 <div id="uppercase" class="flex items-center text-red-500">
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                         <circle cx="10" cy="10" r="8"/>
                                     </svg>
                                     Uppercase letter
-                                </div>
-                                <div id="lowercase" class="flex items-center text-red-500">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <circle cx="10" cy="10" r="8"/>
-                                    </svg>
-                                    Lowercase letter
                                 </div>
                                 <div id="number" class="flex items-center text-red-500">
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">

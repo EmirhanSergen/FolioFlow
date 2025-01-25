@@ -7,44 +7,49 @@ class Dashboard {
         $this->db = $database;
     }
 
-    // Get active investment count (replacing getInvestmentCount as we want active only)
+    /**
+     * Get the count of active investments for a user.
+     *
+     * @param int $userId
+     * @return int
+     */
     public function getActiveInvestmentCount($userId) {
         try {
             $stmt = $this->db->prepare("
-            SELECT COUNT(*) as total 
-            FROM investments 
-            WHERE user_id = ? AND status = 'active'
-        ");
+                SELECT COUNT(*) as total 
+                FROM investments 
+                WHERE user_id = ? AND status = 'active'
+            ");
             $stmt->execute([$userId]);
-            return (int) $stmt->fetch()['total'] ?? 0;
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return (int) ($result['total'] ?? 0);
         } catch (Exception $e) {
             error_log("[Dashboard] Error fetching active investment count: " . $e->getMessage());
             return 0;
         }
     }
 
-    // Calculate total investment and current value (enhanced version of calculateTotalInvestmentByUserId)
+    /**
+     * Calculate the total invested amount and current portfolio value for active investments.
+     *
+     * @param int $userId
+     * @return array ['total_investment' => float, 'current_value' => float]
+     */
     public function calculateTotalInvestmentByUserId($userId) {
         try {
             $stmt = $this->db->prepare("
                 SELECT 
-                    COALESCE(SUM(buy_price * amount), 0) as total_investment,
-                    COALESCE(SUM(
-                        CASE 
-                            WHEN current_price IS NOT NULL 
-                            THEN (current_price * amount) 
-                            ELSE (buy_price * amount) 
-                        END
-                    ), 0) as current_value
+                    COALESCE(SUM(i.buy_price * i.amount), 0) AS total_investment,
+                    COALESCE(SUM(s.current_price * i.amount), 0) AS current_value
                 FROM investments i
-                LEFT JOIN symbols s ON i.name = s.symbol
+                JOIN symbols s ON i.name = s.symbol
                 WHERE i.user_id = ? AND i.status = 'active'
             ");
             $stmt->execute([$userId]);
-            $result = $stmt->fetch();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return [
-                'total_investment' => (float) $result['total_investment'],
-                'current_value' => (float) $result['current_value']
+                'total_investment' => (float) ($result['total_investment'] ?? 0),
+                'current_value' => (float) ($result['current_value'] ?? 0)
             ];
         } catch (Exception $e) {
             error_log("[Dashboard] Error calculating total investment: " . $e->getMessage());
@@ -55,92 +60,121 @@ class Dashboard {
         }
     }
 
-    // Calculate total profit from both active and closed investments (enhanced version of calculateProfitByUserId)
+    /**
+     * Calculate the total profit/loss for active investments.
+     *
+     * @param int $userId
+     * @return float
+     */
     public function calculateTotalProfitByUserId($userId) {
         try {
             $stmt = $this->db->prepare("
-            SELECT 
-                COALESCE(SUM(
-                    CASE 
-                        WHEN status = 'closed' 
-                        THEN (sell_price - buy_price) * amount
-                        WHEN status = 'active' AND current_price IS NOT NULL
-                        THEN (current_price - buy_price) * amount
-                        ELSE 0
-                    END
-                ), 0) as total_profit
-            FROM investments i
-            LEFT JOIN symbols s ON i.name = s.symbol
-            WHERE i.user_id = ?
-        ");
+                SELECT 
+                    COALESCE(SUM((s.current_price - i.buy_price) * i.amount), 0) AS total_profit
+                FROM investments i
+                JOIN symbols s ON i.name = s.symbol
+                WHERE i.user_id = ? AND i.status = 'active' AND s.current_price IS NOT NULL
+            ");
             $stmt->execute([$userId]);
-            return (float) $stmt->fetch()['total_profit'];
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return (float) ($result['total_profit'] ?? 0);
         } catch (Exception $e) {
             error_log("[Dashboard] Error calculating total profit: " . $e->getMessage());
             return 0;
         }
     }
 
-    // Get best and worst performing active investments
+    /**
+     * Get the best and worst performing active investments based on ROI.
+     *
+     * @param int $userId
+     * @return array ['best' => array|null, 'worst' => array|null]
+     */
     public function getPerformanceExtremes($userId) {
-        // Best performing
-        $stmt = $this->db->prepare("
-        SELECT 
-            i.*,
-            s.current_price,
-            ((s.current_price - i.buy_price) / i.buy_price * 100) as return_percentage
-        FROM investments i
-        LEFT JOIN symbols s ON i.name = s.symbol
-        WHERE i.user_id = ? 
-            AND i.status = 'active' 
-            AND s.current_price IS NOT NULL
-        ORDER BY return_percentage DESC
-        LIMIT 1
-    ");
-        $stmt->execute([$userId]);
-        $best = $stmt->fetch();
+        try {
+            // Best performing investment
+            $stmt = $this->db->prepare("
+                SELECT 
+                    i.id,
+                    s.symbol,
+                    s.name,
+                    i.amount,
+                    i.buy_price,
+                    s.current_price,
+                    ROUND(((s.current_price - i.buy_price) / i.buy_price) * 100, 2) AS return_percentage
+                FROM investments i
+                JOIN symbols s ON i.name = s.symbol
+                WHERE i.user_id = ? 
+                    AND i.status = 'active' 
+                    AND s.current_price IS NOT NULL
+                ORDER BY return_percentage DESC
+                LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            $best = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 
-        // Worst performing
-        $stmt = $this->db->prepare("
-        SELECT 
-            i.*,
-            s.current_price,
-            ((s.current_price - i.buy_price) / i.buy_price * 100) as return_percentage
-        FROM investments i
-        LEFT JOIN symbols s ON i.name = s.symbol
-        WHERE i.user_id = ? 
-            AND i.status = 'active' 
-            AND s.current_price IS NOT NULL
-        ORDER BY return_percentage ASC
-        LIMIT 1
-    ");
-        $stmt->execute([$userId]);
-        $worst = $stmt->fetch();
+            // Worst performing investment
+            $stmt = $this->db->prepare("
+                SELECT 
+                    i.id,
+                    s.symbol,
+                    s.name,
+                    i.amount,
+                    i.buy_price,
+                    s.current_price,
+                    ROUND(((s.current_price - i.buy_price) / i.buy_price) * 100, 2) AS return_percentage
+                FROM investments i
+                JOIN symbols s ON i.name = s.symbol
+                WHERE i.user_id = ? 
+                    AND i.status = 'active' 
+                    AND s.current_price IS NOT NULL
+                ORDER BY return_percentage ASC
+                LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            $worst = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 
-        return [
-            'best' => $best,
-            'worst' => $worst
-        ];
+            return [
+                'best' => $best,
+                'worst' => $worst
+            ];
+        } catch (Exception $e) {
+            error_log("[Dashboard] Error fetching performance extremes: " . $e->getMessage());
+            return [
+                'best' => null,
+                'worst' => null
+            ];
+        }
     }
 
-
-
-    // Calculate ROI including both active and closed positions (new function)
+    /**
+     * Calculate the Return on Investment (ROI) for active investments.
+     *
+     * @param int $userId
+     * @return float ROI percentage
+     */
     public function calculateROI($userId) {
-        // Get total investment amount (both active and closed)
-        $stmt = $this->db->prepare("
-        SELECT 
-            SUM(buy_price * amount) as total_investment
-        FROM investments 
-        WHERE user_id = ?
-    ");
-        $stmt->execute([$userId]);
-        $totalInvestment = $stmt->fetch()['total_investment'] ?? 0;
+        try {
+            // Retrieve total investment and current value
+            $investmentData = $this->calculateTotalInvestmentByUserId($userId);
+            $totalInvestment = $investmentData['total_investment'];
+            $currentValue = $investmentData['current_value'];
 
-        // Get total profit
-        $totalProfit = $this->calculateTotalProfitByUserId($userId);
+            if ($totalInvestment == 0) {
+                return 0;
+            }
 
-        // Calculate ROI
-        return $totalInvestment > 0 ? ($totalProfit / $totalInvestment) * 100 : 0;
+            // Calculate profit/loss
+            $profitLoss = $currentValue - $totalInvestment;
+
+            // Calculate ROI
+            $roi = ($profitLoss / $totalInvestment) * 100;
+
+            return round($roi, 2);
+        } catch (Exception $e) {
+            error_log("[Dashboard] Error calculating ROI: " . $e->getMessage());
+            return 0;
+        }
     }
 }
+?>

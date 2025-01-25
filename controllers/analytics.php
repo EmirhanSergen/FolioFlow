@@ -1,126 +1,93 @@
 <?php
 // controllers/analytics.php
 
+// Include necessary classes and middleware
 require_once __DIR__ . '/../middleware/auth.php';
 require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Analytics.php';
 
-// Make sure user is authenticated
+// Ensure the user is authenticated
 checkAuth();
 
-// Prepare environment
 try {
-    // 1. Create DB / Analytics instance
+    // Load configuration and initialize database connection
     $config = require __DIR__ . '/../config/config.php';
-    $db = new Database($config['database']);  // This presumably returns a PDO
-    $analytics = new Analytics($db);
+    $db = new Database($config['database']);
 
-    // 2. Parse JSON from the request body
-    $requestBody = file_get_contents('php://input');
-    $data = json_decode($requestBody, true);
-    if (!is_array($data)) {
-        $data = [];
+    // Check if the Database class provides a PDO instance
+    if (!isset($db->connection) || !$db->connection instanceof PDO) {
+        throw new Exception("Database connection not established.");
     }
 
-    // 3. Get user ID from session
-    session_start();
-    if (empty($_SESSION['user_id'])) {
-        throw new Exception("No user ID in session.");
-    }
-    $userId = (int) $_SESSION['user_id'];
+    // Initialize Analytics class with the PDO connection
+    $analytics = new Analytics($db->connection);
 
-    // 4. Extract parameters
-    $portfolioPeriod   = $data['portfolio_period']   ?? 'daily';
-    $performancePeriod = $data['performance_period'] ?? 'monthly';
+    // Get the current user's ID from the session
+    $userId = $_SESSION['user_id'];
 
-    // 5. Fetch data
-    try {
-        $portfolioHistory = $analytics->getPortfolioHistoryByPeriod($userId, $portfolioPeriod);
-    } catch (Exception $e) {
-        error_log("Portfolio History Error: " . $e->getMessage());
-        $portfolioHistory = [];
-    }
+    /**
+     * 1. Fetch Overall Portfolio
+     */
+    $overallPortfolio = $analytics->getOverallPortfolio($userId);
+    $totalInvested = $overallPortfolio['totalInvested'];
+    $currentValue = $overallPortfolio['currentValue'];
 
-    try {
-        $performance = $analytics->getPerformanceByPeriod($userId, $performancePeriod);
-    } catch (Exception $e) {
-        error_log("Performance Error: " . $e->getMessage());
-        $performance = [];
-    }
+    /**
+     * 2. Fetch Investment Distribution
+     */
+    $investmentDistributionData = $analytics->getInvestmentDistribution($userId);
 
-    try {
-        $distribution = $analytics->getInvestmentDistribution($userId);
-        if (!$distribution) {
-            $distribution = [['name' => 'No Data', 'current_value' => 0]];
-        }
-    } catch (Exception $e) {
-        error_log("Distribution Error: " . $e->getMessage());
-        $distribution = [['name' => 'No Data', 'current_value' => 0]];
-    }
+    // Structure data for the Investment Distribution Chart
+    $chartData['distribution']['labels'] = array_column($investmentDistributionData, 'name');
+    $chartData['distribution']['values'] = array_map(function($item) {
+        return round($item['currentValue'], 2);
+    }, $investmentDistributionData);
 
-    try {
-        $winLossRatio = $analytics->getWinLossRatio($userId);
-    } catch (Exception $e) {
-        error_log("Win/Loss Ratio Error: " . $e->getMessage());
-        $winLossRatio = ['wins' => 0, 'losses' => 0];
-    }
+    /**
+     * 3. Fetch Overall Performance
+     */
+    $overallPerformance = $analytics->getOverallPerformance($userId);
+    $totalProfit = $currentValue-$totalInvested ;
+    // For the Portfolio Chart, represent overall invested vs current value
+    $chartData['portfolioChart']['labels'] = ['Invested','Overall Profit', 'Current'];
+    $chartData['portfolioChart']['values'] = [$totalInvested, $totalProfit , $currentValue];
 
-    try {
-        $tradeMetrics = $analytics->getTradeMetrics($userId);
-    } catch (Exception $e) {
-        error_log("Trade Metrics Error: " . $e->getMessage());
-        $tradeMetrics = [];
-    }
+    /**
+     * 4. Fetch Win/Loss Ratio
+     */
+    $winLossRatio = $analytics->getWinLossRatio($userId);
 
-    // 6. Build chart data
-    $chartData = [
-        'portfolioHistory' => [
-            'labels' => array_column($portfolioHistory, 'period'),
-            'values' => [
-                'invested' => array_map(fn($v) => round($v, 2), array_column($portfolioHistory, 'invested_value')),
-                'current'  => array_map(fn($v) => round($v, 2), array_column($portfolioHistory, 'current_value')),
-            ],
-        ],
-        'distribution' => [
-            'labels' => array_column($distribution, 'name'),
-            'values' => array_map(fn($v) => round($v, 2), array_column($distribution, 'current_value')),
-        ],
-        'monthlyPerformance' => [
-            'labels' => array_column($performance, 'period'),
-            'values' => array_map(fn($v) => round($v, 2), array_column($performance, 'profit_loss')),
-        ],
-    ];
+    /**
+     * 5. Fetch Trade Metrics
+     */
+    $tradeMetrics = $analytics->getTradeMetrics($userId);
 
-    // 7. Prepare tradeMetrics safely
-    //    If you got an empty array, fill with zeros to avoid notice errors
-    $defaults = [
-        'totalTrades' => 0, 'winningTrades' => 0, 'losingTrades' => 0, 'successRate' => 0,
-        'averageProfitPerTrade' => 0, 'averageLossPerTrade' => 0, 'profitFactor' => 0,
-        'largestWin' => 0, 'largestLoss' => 0, 'bestMonthProfit' => 0, 'worstMonthLoss' => 0,
-        'monthlyConsistency' => 0, 'profitableMonths' => 0, 'totalMonths' => 0, 'avgHoldTime' => 0
-    ];
-    $tradeMetrics = array_merge($defaults, $tradeMetrics);
-    // Round numeric fields
-    foreach ($tradeMetrics as $key => $val) {
-        if (is_numeric($val)) {
-            $tradeMetrics[$key] = round($val, 2);
-        }
-    }
+    // Assign trade metrics to individual variables
+    $averageProfitPerTrade = round($tradeMetrics['averageProfitPerTrade'] ?? 0, 2);
+    $averageLossPerTrade = round($tradeMetrics['averageLossPerTrade'] ?? 0, 2);
+    $profitFactor = round($tradeMetrics['profitFactor'] ?? 0, 2);
+    $avgHoldTime = round($tradeMetrics['avgHoldTime'] ?? 0, 2);
+    $bestMonthProfit = round($tradeMetrics['bestMonthProfit'] ?? 0, 2);
+    $worstMonthLoss = round($tradeMetrics['worstMonthLoss'] ?? 0, 2);
+    $largestWin = round($tradeMetrics['largestWin'] ?? 0, 2);
+    $largestLoss = round($tradeMetrics['largestLoss'] ?? 0, 2);
+    $riskRewardRatio = round($tradeMetrics['riskRewardRatio'] ?? 0, 2);
 
-    // 8. Return JSON
-    header('Content-Type: application/json');
-    echo json_encode([
-        'chartData'    => $chartData,
-        'winLossRatio' => $winLossRatio,
-        'tradeMetrics' => $tradeMetrics,
-    ]);
-    exit;
+    /**
+     * 6. Fetch Monthly Profits for Chart
+     */
+    $monthlyProfitsData = $analytics->fetchMonthlyProfits($userId);
+    $chartData['monthlyPerformance']['labels'] = array_column($monthlyProfitsData, 'month');
+    $chartData['monthlyPerformance']['values'] = array_map(function($item) {
+        return round($item['monthlyProfit'], 2);
+    }, $monthlyProfitsData);
 
-} catch (Exception $e) {
-    // If anything goes wrong, return an error
-    error_log("Main Analytics Error: " . $e->getMessage());
-    http_response_code(500);
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'Failed to fetch analytics data.']);
-    exit;
+} catch(Exception $e) {
+    // Log any errors and set an error message for the view
+    error_log("Analytics Error: " . $e->getMessage());
+    $error = "Error fetching analytics data";
 }
+
+// Include the analytics view
+require __DIR__ . '/../views/analytics.view.php';
+?>

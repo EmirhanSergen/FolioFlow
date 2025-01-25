@@ -2,9 +2,9 @@
     <div class="max-w-7xl mx-auto px-4 py-3">
         <div class="flex justify-between items-center">
             <div class="flex items-center space-x-8">
-                <a href="/FolioFlow" class="text-xl font-semibold text-blue-900">FolioFlow</a>
 
                 <?php if(isset($_SESSION['user_id'])): ?>
+                    <a href="/FolioFlow/dashboard" class="text-xl font-semibold text-blue-900">FolioFlow</a>
                     <!-- Primary Navigation -->
                     <div class="hidden md:flex items-center space-x-1">
                         <!-- Core Features -->
@@ -16,7 +16,6 @@
                            class="px-3 py-2 rounded-md text-sm font-medium <?= urlIs('/FolioFlow/investments') ? 'bg-blue-50 text-blue-900' : 'text-gray-600 hover:text-blue-900 hover:bg-blue-50' ?>">
                             Portfolio
                         </a>
-
                         <!-- Investment Management -->
                         <div class="relative group">
                             <button class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-900 hover:bg-blue-50 inline-flex items-center">
@@ -47,8 +46,22 @@
                            class="px-3 py-2 rounded-md text-sm font-medium <?= urlIs('/FolioFlow/analytics') ? 'bg-blue-50 text-blue-900' : 'text-gray-600 hover:text-blue-900 hover:bg-blue-50' ?>">
                             Advanced Analytics
                         </a>
+                        <!-- Documentation -->
+                        <a href="/FolioFlow/documentation"
+                           class="px-3 py-2 rounded-md text-sm font-medium <?= urlIs('/FolioFlow/documentation') ? 'bg-blue-50 text-blue-900' : 'text-gray-600 hover:text-blue-900 hover:bg-blue-50' ?>">
+                            Documentation
+                        </a>
                     </div>
+
+                <?php else :?>
+                    <a href="/FolioFlow" class="text-xl font-semibold text-blue-900">FolioFlow</a>
+                    <!-- Documentation for Visitors -->
+                    <a href="/FolioFlow/documentation"
+                       class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-900 hover:bg-blue-50">
+                        Documentation
+                    </a>
                 <?php endif; ?>
+
             </div>
 
             <div class="flex items-center space-x-4">

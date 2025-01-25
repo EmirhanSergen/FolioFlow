@@ -72,7 +72,7 @@
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600">Total Profit/Loss</p>
+                                    <p class="text-sm font-medium text-gray-600">Profit/Loss</p>
                                     <p class="text-2xl font-bold <?= $totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
                                         $<?= number_format($totalProfit, 2) ?>
                                     </p>
@@ -91,7 +91,7 @@
                                     </svg>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="text-sm font-medium text-gray-600">Total ROI</p>
+                                    <p class="text-sm font-medium text-gray-600">ROI</p>
                                     <p class="text-2xl font-bold <?= $roi >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
                                         <?= number_format($roi, 2) ?>%
                                     </p>
