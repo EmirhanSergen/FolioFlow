@@ -1,73 +1,103 @@
-# FolioFlow - Investment Portfolio Tracker
+# 📊 FolioFlow — Investment Portfolio Tracker
 
-A PHP-based web application for tracking cryptocurrency investments and managing investment portfolios.
+**FolioFlow** is a lightweight PHP-based web application to track cryptocurrency investments, manage portfolios, and monitor profit/loss with real-time price updates.
 
-## Features
+---
 
-- User Authentication (Register/Login)
-- Investment Portfolio Management
-- Real-time Cryptocurrency Price Updates
-- Position Tracking
-- Profit/Loss Calculations
-- Investment History
+## 🚀 Features
 
-## Requirements
+- ✅ User Registration & Login (Authentication)
+- ✅ Add / Update / Close Investments
+- ✅ Real-time Cryptocurrency Price Fetching (via Binance API)
+- ✅ Portfolio Analytics & ROI Calculation
+- ✅ Profit/Loss Visualization
+- ✅ Investment History & Logs
+- ✅ Middleware-based Access Protection
 
-- PHP 7.4 or higher
-- MySQL 5.7 or higher
-- Apache/Nginx web server
-- CURL extension enabled
-- PDO extension enabled
+---
 
-## Installation
+## ⚙️ Requirements
 
-1. Clone the repository:
-```bash
-git clone https://github.com/EmirhanSergen/FolioFlow.git
-```
+- PHP **7.4+**
+- MySQL **5.7+**
+- Apache or Nginx
+- `PDO` and `CURL` extensions enabled
+- Composer (optional, for future improvements)
 
-2. Create a MySQL database and import the database schema:
-```sql
-CREATE DATABASE folioflow;
-```
+---
 
-3. Copy `.env.example` to `.env` and update the configuration:
-```bash
-cp .env.example .env
-```
+## 📦 Installation Guide
 
-4. Update the database configuration in `.env`:
-```
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=folioflow
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/EmirhanSergen/FolioFlow.git
+   cd FolioFlow
+   ```
 
-5. Configure your web server to point to the project's root directory
+2. **Create your MySQL database**
+   ```sql
+   CREATE DATABASE folioflow;
+   ```
 
-## Project Structure
+3. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit the `.env` file with your own database credentials:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=folioflow
+   DB_USERNAME=your_username
+   DB_PASSWORD=your_password
+
+   LOGIN_URL=/FolioFlow/login
+   DASHBOARD_URL=/FolioFlow/dashboard
+   APP_ENV=development
+   ```
+
+4. **Point your web server’s root to the project directory**
+   - Apache: configure `DocumentRoot` to point to `/path/to/FolioFlow`
+   - Nginx: use `root /path/to/FolioFlow;`
+
+---
+
+## 📁 Project Structure
 
 ```
 FolioFlow/
-├── api/
-├── classes/
-├── config/
-├── controllers/
-├── middleware/
-├── views/
-└── index.php
+├── api/                   # (Reserved for future REST APIs)
+├── classes/               # Core classes (Database, Investment, Analytics, etc.)
+├── config/                # Configuration files (.env loader, DB config)
+├── controllers/           # Page controllers (dashboard, login, investments, etc.)
+├── middleware/            # Authentication and price check middleware
+├── views/                 # HTML views and partials
+├── logs/                  # Error logs (auto-generated)
+├── index.php              # App entry point & router
+├── router.php             # Route definitions
+└── .env                   # Environment configuration (ignored by Git)
 ```
 
-## License
+---
 
-MIT License
+## 🧪 Development Tips
 
-## Contributing
+- Use `dd($value)` helper to debug variables (disabled in production).
+- Use `urlIs('/path')` to highlight active links in navigation.
+- Custom middleware ensures prices are updated only every 15 minutes for efficiency.
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository  
+2. Create a new feature branch  
+3. Commit your changes  
+4. Push your branch  
+5. Open a Pull Request on GitHub
