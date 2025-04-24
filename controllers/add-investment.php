@@ -4,6 +4,7 @@ require_once __DIR__ . '/../classes/Database.php';
 require_once __DIR__ . '/../classes/Symbol.php';
 require_once __DIR__ . '/../classes/Investment.php';
 
+// Require user to be authenticated
 checkAuth();
 
 $errors = [];
@@ -11,7 +12,7 @@ $success = '';
 $investmentType = $_POST['investment_type'] ?? '';
 
 try {
-    // Initialize database and dependencies
+    // Load configuration and initialize core classes
     $config = require __DIR__ . '/../config/config.php';
     $db = new Database($config['database']);
     $symbol = new Symbol($db);

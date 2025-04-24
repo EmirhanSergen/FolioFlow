@@ -1,13 +1,25 @@
 <?php
+/**
+ * Class Registration
+ * Handles user registration, including validation and account creation.
+ */
 class Registration {
+    /** @var PDO Database connection */
     private $db;
+
+    /** @var array Validation errors */
     private $errors = [];
 
-    // Db connection
+    /**
+     * Constructor to initialize DB connection.
+     */
     public function __construct($database) {
         $this->db = $database;
     }
 
+    /**
+     * Handle the registration process including validation and user creation.
+     */
     public function handleRegistration($data) {
         // Sanitize inputs
         $username = htmlspecialchars(trim($data['username'] ?? ''), ENT_QUOTES, 'UTF-8');
@@ -15,10 +27,10 @@ class Registration {
         $password = $data['password'] ?? '';
         $confirm_password = $data['confirm_password'] ?? '';
 
-        // Validate input
+        // Validate user input
         $this->validateInput($username, $email, $password, $confirm_password);
 
-        // Can be added email verification with PHPMailer
+        // You can extend this with email verification (e.g., PHPMailer)
         if (empty($this->errors)) {
             return $this->createUser($username, $email, $password);
         }
@@ -26,6 +38,9 @@ class Registration {
         return $this->errors;
     }
 
+    /**
+     * Validate username, email, and password inputs.
+     */
     private function validateInput($username, $email, $password, $confirm_password) {
         // Username validation
         if (empty($username) || strlen($username) < 3) {
@@ -59,14 +74,18 @@ class Registration {
             }
         }
 
+        // Password match check
         if ($password !== $confirm_password) {
             $this->errors['confirm_password'] = 'Passwords do not match';
         }
     }
 
+    /**
+     * Create a new user account if the username and email are unique.
+     */
     private function createUser($username, $email, $password) {
         try {
-            // Check existing user
+            // Check if username or email already exists
             $stmt = $this->db->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
             $stmt->execute([$username, $email]);
 
@@ -74,7 +93,7 @@ class Registration {
                 return ['general' => 'Username or email already exists'];
             }
 
-            // Create user
+            // Hash the password and store user
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
             $stmt = $this->db->prepare(

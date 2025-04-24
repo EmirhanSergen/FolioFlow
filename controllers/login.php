@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['password'] = 'Password is required';
     }
 
+    // If input is valid, attempt to log in
     if (empty($errors)) {
         try {
             // Check user credentials
@@ -30,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
+            // Verify password and log user in
             if ($user && password_verify($password, $user['password'])) {
                 // Login successful
                 $_SESSION['user_id'] = $user['id'];

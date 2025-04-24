@@ -1,5 +1,4 @@
 <?php
-// controllers/analytics.php
 
 // Include necessary classes and middleware
 require_once __DIR__ . '/../middleware/auth.php';
@@ -88,6 +87,6 @@ try {
     $error = "Error fetching analytics data";
 }
 
-// Include the analytics view
+// Load analytics view
 require __DIR__ . '/../views/analytics.view.php';
 ?>

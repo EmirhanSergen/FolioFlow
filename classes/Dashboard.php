@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Dashboard class for see overall investments .
+ */
 class Dashboard {
     private $db;
 
@@ -9,9 +11,6 @@ class Dashboard {
 
     /**
      * Get the count of active investments for a user.
-     *
-     * @param int $userId
-     * @return int
      */
     public function getActiveInvestmentCount($userId) {
         try {
@@ -31,9 +30,6 @@ class Dashboard {
 
     /**
      * Calculate the total invested amount and current portfolio value for active investments.
-     *
-     * @param int $userId
-     * @return array ['total_investment' => float, 'current_value' => float]
      */
     public function calculateTotalInvestmentByUserId($userId) {
         try {
@@ -62,9 +58,6 @@ class Dashboard {
 
     /**
      * Calculate the total profit/loss for active investments.
-     *
-     * @param int $userId
-     * @return float
      */
     public function calculateTotalProfitByUserId($userId) {
         try {
@@ -86,9 +79,6 @@ class Dashboard {
 
     /**
      * Get the best and worst performing active investments based on ROI.
-     *
-     * @param int $userId
-     * @return array ['best' => array|null, 'worst' => array|null]
      */
     public function getPerformanceExtremes($userId) {
         try {
@@ -149,9 +139,6 @@ class Dashboard {
 
     /**
      * Calculate the Return on Investment (ROI) for active investments.
-     *
-     * @param int $userId
-     * @return float ROI percentage
      */
     public function calculateROI($userId) {
         try {

@@ -9,8 +9,6 @@ class Analytics
 
     /**
      * Constructor expects a PDO instance.
-     *
-     * @param PDO $database
      */
     public function __construct(PDO $database)
     {
@@ -19,10 +17,6 @@ class Analytics
 
     /**
      * Get the overall portfolio invested and current values.
-     *
-     * @param int $userId
-     * @return array
-     * @throws Exception
      */
     public function getOverallPortfolio(int $userId): array
     {
@@ -55,10 +49,6 @@ class Analytics
 
     /**
      * Get the distribution of current investments by symbol.
-     *
-     * @param int $userId
-     * @return array
-     * @throws Exception
      */
     public function getInvestmentDistribution(int $userId): array
     {
@@ -89,10 +79,6 @@ class Analytics
 
     /**
      * Get the overall performance (profit/loss).
-     *
-     * @param int $userId
-     * @return float
-     * @throws Exception
      */
     public function getOverallPerformance(int $userId): float
     {
@@ -121,10 +107,6 @@ class Analytics
 
     /**
      * Get the count of winning vs losing trades for a user.
-     *
-     * @param int $userId
-     * @return array
-     * @throws Exception
      */
     public function getWinLossRatio(int $userId): array
     {
@@ -146,9 +128,6 @@ class Analytics
 
     /**
      * Fetch overall trade statistics for a user.
-     *
-     * @param int $userId
-     * @return array
      */
     private function fetchOverallTradeStatistics(int $userId): array
     {
@@ -181,9 +160,6 @@ class Analytics
 
     /**
      * Fetch monthly profits for a user.
-     *
-     * @param int $userId
-     * @return array
      */
     public function fetchMonthlyProfits(int $userId): array
     {
@@ -252,9 +228,6 @@ class Analytics
 
     /**
      * Calculate derived metrics based on overall statistics.
-     *
-     * @param array $stats
-     * @return array
      */
     private function calculateDerivedMetrics(array $stats): array
     {
@@ -274,10 +247,6 @@ class Analytics
 
     /**
      * Get comprehensive trade metrics for a user.
-     *
-     * @param int $userId
-     * @return array
-     * @throws Exception
      */
     public function getTradeMetrics(int $userId): array
     {
@@ -313,9 +282,6 @@ class Analytics
 
     /**
      * Calculate average hold time for closed trades in days.
-     *
-     * @param int $userId
-     * @return float|int
      */
     private function calculateAverageHoldTime(int $userId)
     {

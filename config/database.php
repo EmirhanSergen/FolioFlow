@@ -1,6 +1,7 @@
 <?php
-
-
+/**
+ * Establish and return a database connection using project config.
+ */
 // Establishes a connection to the database
 function connectDB() {
     // Load database configuration from the config file

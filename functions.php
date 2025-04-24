@@ -1,6 +1,8 @@
 <?php
 
-// Debugging utility: Dumps a value and stops the script (dev mode only)
+/**
+ * Debugging utility: dumps a value and halts execution (only in non-production environments).
+ */
 function dd($value) {
     if (getenv('APP_ENV') === 'production') {
         echo "Debugging is disabled in production.";
@@ -13,7 +15,10 @@ function dd($value) {
     die();
 }
 
-// Check if the current URL matches the given value (ignores query strings)
+/**
+ * Check if the current URL path matches the given route.
+ * Ignores query strings and normalizes trailing slashes.
+ */
 function urlIs($value) {
     $currentUrl = strtok($_SERVER['REQUEST_URI'], '?'); // Remove query string
     return rtrim($currentUrl, '/') === rtrim($value, '/'); // Normalize URLs

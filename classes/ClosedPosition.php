@@ -7,6 +7,9 @@ class ClosedPosition {
         $this->db = $database;
     }
 
+    /**
+     * Get the all closed positions before
+     */
     public function getAllClosedPositions($userId) {
         $stmt = $this->db->prepare(
             "SELECT name, buy_price, sell_price, 

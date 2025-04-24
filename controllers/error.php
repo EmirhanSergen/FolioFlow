@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Render a user-friendly error page based on HTTP status code.
+ */
 function renderError($code) {
     $errors = [
         '404' => [

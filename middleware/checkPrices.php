@@ -6,9 +6,6 @@ require_once __DIR__ . '/../classes/Investment.php';
 
 /**
  * Middleware to check and update prices for investments.
- *
- * @param int $userId User ID of the authenticated user.
- * @return void
  */
 function checkAndUpdatePrices($userId) {
     // Load configuration and initialize dependencies
