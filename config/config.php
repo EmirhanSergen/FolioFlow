@@ -1,8 +1,4 @@
 <?php
-/**
- * Loads and returns application configuration.
- * Reads from .env if it exists and maps values into PHP superglobals.
- */
 
 // Load environment variables from .env file if it exists
 if (file_exists(__DIR__ . '/../.env')) {
@@ -32,7 +28,7 @@ return [
             'user_agent' => 'FolioFlow/1.0'
         ]
     ],
-    // Security and session settings
+    // Security settings
     'security' => [
         'session_lifetime' => 3600, // Session lifetime in seconds (1 hour)
         'password_algo' => PASSWORD_ARGON2ID, // Password hashing algorithm

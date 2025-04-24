@@ -8,35 +8,18 @@ require('partials/navbar.php');
     <div class="relative isolate overflow-hidden">
         <div class="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.blue.900),theme(colors.slate.50))] opacity-20"></div>
         <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 text-center">
-            <h1 class="text-4xl font-extrabold tracking-tight text-blue-900 sm:text-6xl">
+            <h1 class="text-5xl font-extrabold tracking-tight text-blue-900 sm:text-7xl">
                 FolioFlow Documentation
             </h1>
-            <p class="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+            <p class="mt-8 text-xl leading-9 text-gray-700 max-w-3xl mx-auto">
                 Everything you need to understand, run and extend <span class="font-semibold">FolioFlow</span> — from folder structure to deployment best‑practices.
             </p>
-            <a href="#toc" class="mt-10 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-white font-semibold shadow hover:bg-emerald-700 transition">
-                Jump to Docs
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6" /></svg>
-            </a>
         </div>
     </div>
 
     <!-- Documentation Content -->
     <div id="toc" class="py-24 bg-white">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <!-- Table of Contents -->
-            <div class="mb-20">
-                <h2 class="text-base font-semibold leading-7 text-emerald-600">Quick Nav</h2>
-                <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-sm">
-                    <a href="#intro" class="hover:underline text-blue-900">Introduction</a>
-                    <a href="#structure" class="hover:underline text-blue-900">Project Structure</a>
-                    <a href="#usage" class="hover:underline text-blue-900">Usage Instructions</a>
-                    <a href="#features" class="hover:underline text-blue-900">Features</a>
-                    <a href="#schema" class="hover:underline text-blue-900">Database Schema</a>
-                    <a href="#api" class="hover:underline text-blue-900">API Endpoints</a>
-                    <a href="#roadmap" class="hover:underline text-blue-900">Improvements & Roadmap</a>
-                </div>
-            </div>
 
             <!-- Introduction -->
             <section id="intro" class="mx-auto max-w-2xl lg:text-center">
@@ -100,70 +83,6 @@ FolioFlow/
                         </div>
                     <?php endforeach; ?>
                 </div>
-            </section>
-
-            <!-- Database Schema -->
-            <section id="schema" class="mt-16">
-                <h2 class="text-xl font-bold text-blue-900">Database Schema (Core)</h2>
-                <pre class="mt-4 bg-slate-100 p-4 rounded-lg text-sm text-gray-800 overflow-auto">
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE symbols (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    symbol VARCHAR(20) UNIQUE,
-    name VARCHAR(50),
-    type ENUM('crypto','stock') DEFAULT 'crypto',
-    current_price DECIMAL(18,8),
-    last_updated TIMESTAMP NULL
-);
-
-CREATE TABLE investments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    name VARCHAR(20),
-    buy_price DECIMAL(18,8),
-    amount DECIMAL(18,8),
-    status ENUM('active','closed') DEFAULT 'active',
-    sell_price DECIMAL(18,8) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    closed_at TIMESTAMP NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
-CREATE TABLE investment_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    investment_id INT,
-    previous_amount DECIMAL(18,8),
-    added_amount DECIMAL(18,8),
-    previous_buy_price DECIMAL(18,8),
-    new_buy_price DECIMAL(18,8),
-    user_id INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (investment_id) REFERENCES investments(id)
-);
-                </pre>
-            </section>
-
-            <!-- API Endpoints -->
-            <section id="api" class="mt-16">
-                <h2 class="text-xl font-bold text-blue-900">Planned REST API (draft)</h2>
-                <table class="mt-4 w-full text-left text-sm">
-                    <thead class="bg-slate-100 font-medium text-gray-800">
-                    <tr><th class="px-4 py-2">Method</th><th class="px-4 py-2">Endpoint</th><th class="px-4 py-2">Description</th></tr>
-                    </thead>
-                    <tbody class="divide-y">
-                    <tr><td class="px-4 py-2">GET</td><td class="px-4 py-2">/api/investments</td><td class="px-4 py-2">List active investments</td></tr>
-                    <tr><td class="px-4 py-2">POST</td><td class="px-4 py-2">/api/investments</td><td class="px-4 py-2">Create new investment</td></tr>
-                    <tr><td class="px-4 py-2">PATCH</td><td class="px-4 py-2">/api/investments/{id}</td><td class="px-4 py-2">Update position</td></tr>
-                    <tr><td class="px-4 py-2">DELETE</td><td class="px-4 py-2">/api/investments/{id}</td><td class="px-4 py-2">Close/Delete position</td></tr>
-                    </tbody>
-                </table>
             </section>
 
             <!-- Roadmap & Known Issues -->

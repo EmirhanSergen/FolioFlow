@@ -109,46 +109,52 @@
                 <div class="p-6">
                     <h2 class="text-xl font-semibold text-blue-900 mb-4">Performance Summary</h2>
                     <?php if ($bestPerforming): ?>
-                        <div class="mb-4 rounded-lg bg-emerald-50/50 p-4">
+                        <div class="mb-4 rounded-lg <?= $bestReturn >= 0 ? 'bg-emerald-50/50' : 'bg-red-50/50' ?> p-4">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="flex items-center gap-3">
-                                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                        <svg class="w-5 h-5 <?= $bestReturn >= 0 ? 'text-emerald-600' : 'text-red-600' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="<?= $bestReturn >= 0 ? 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' : 'M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6' ?>" />
                                         </svg>
                                         <div>
                                             <div class="font-medium text-gray-900">
                                                 <?= htmlspecialchars($bestPerforming['name']) ?>
                                             </div>
-                                            <div class="text-sm text-gray-500">Best Performing</div>
+                                            <div class="text-sm text-gray-500">
+                                                <?= $bestReturn >= 0 ? 'Best Performing' : 'Least Losing' ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="text-emerald-600 font-medium">
-                                    +<?= number_format($bestReturn, 2) ?>%
+                                <div class="<?= $bestReturn >= 0 ? 'text-emerald-600' : 'text-red-600' ?> font-medium">
+                                    <?= $bestReturn >= 0 ? '+' : '' ?><?= number_format($bestReturn, 2) ?>%
                                 </div>
                             </div>
                         </div>
                     <?php endif; ?>
 
                     <?php if ($worstPerforming): ?>
-                        <div class="rounded-lg bg-red-50/50 p-4">
+                        <div class="rounded-lg <?= $worstReturn >= 0 ? 'bg-emerald-50/50' : 'bg-red-50/50' ?> p-4">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="flex items-center gap-3">
-                                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"/>
+                                        <svg class="w-5 h-5 <?= $worstReturn >= 0 ? 'text-emerald-600' : 'text-red-600' ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="<?= $worstReturn >= 0 ? 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' : 'M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6' ?>" />
                                         </svg>
                                         <div>
                                             <div class="font-medium text-gray-900">
                                                 <?= htmlspecialchars($worstPerforming['name']) ?>
                                             </div>
-                                            <div class="text-sm text-gray-500">Worst Performing</div>
+                                            <div class="text-sm text-gray-500">
+                                                <?= $worstReturn >= 0 ? 'Least Winning' : 'Worst Performing' ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="text-red-600 font-medium">
-                                    <?= number_format($worstReturn, 2) ?>%
+                                <div class="<?= $worstReturn >= 0 ? 'text-emerald-600' : 'text-red-600' ?> font-medium">
+                                    <?= $worstReturn >= 0 ? '+' : '' ?><?= number_format($worstReturn, 2) ?>%
                                 </div>
                             </div>
                         </div>
