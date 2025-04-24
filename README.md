@@ -23,7 +23,7 @@ A PHP-based web application for tracking cryptocurrency investments and managing
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/FolioFlow.git
+git clone https://github.com/EmirhanSergen/FolioFlow.git
 ```
 
 2. Create a MySQL database and import the database schema:
