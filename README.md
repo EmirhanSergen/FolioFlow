@@ -93,11 +93,3 @@ FolioFlow/
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
-
-## 🤝 Contributing
-
-1. Fork the repository  
-2. Create a new feature branch  
-3. Commit your changes  
-4. Push your branch  
-5. Open a Pull Request on GitHub
