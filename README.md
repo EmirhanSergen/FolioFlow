@@ -1,49 +1,39 @@
-# 📊 FolioFlow — Investment Portfolio Tracker
+# FolioFlow
 
-**FolioFlow** is a lightweight PHP-based web application to track cryptocurrency investments, manage portfolios, and monitor profit/loss with real-time price updates.
+**FolioFlow** is a lightweight PHP application for tracking cryptocurrency investments. It allows you to register, log in, add or close positions and monitor profit/loss using real‑time price data.
 
----
+## Features
 
-## 🚀 Features
+- User registration and authentication
+- Add, update and close investments
+- Real‑time price fetching from Binance
+- Portfolio analytics and ROI calculation
+- Profit/loss visualization
+- Investment history and logs
+- Middleware based access protection
 
-- ✅ User Registration & Login (Authentication)
-- ✅ Add / Update / Close Investments
-- ✅ Real-time Cryptocurrency Price Fetching (via Binance API)
-- ✅ Portfolio Analytics & ROI Calculation
-- ✅ Profit/Loss Visualization
-- ✅ Investment History & Logs
-- ✅ Middleware-based Access Protection
+## Requirements
 
----
+- PHP 7.4 or higher with the `PDO` and `CURL` extensions
+- MySQL 5.7 or higher
+- A web server such as Apache or Nginx
 
-## ⚙️ Requirements
-
-- PHP **7.4+**
-- MySQL **5.7+**
-- Apache or Nginx
-- `PDO` and `CURL` extensions enabled
-- Composer (optional, for future improvements)
-
----
-
-## 📦 Installation Guide
+## Installation
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/EmirhanSergen/FolioFlow.git
    cd FolioFlow
    ```
-
-2. **Create your MySQL database**
+2. **Create a database**
    ```sql
    CREATE DATABASE folioflow;
    ```
-
 3. **Configure environment variables**
    ```bash
    cp .env.example .env
    ```
-   Edit the `.env` file with your own database credentials:
+   Edit `.env` with your credentials:
    ```env
    DB_HOST=localhost
    DB_PORT=3306
@@ -55,41 +45,35 @@
    DASHBOARD_URL=/FolioFlow/dashboard
    APP_ENV=development
    ```
+4. **Configure your web server**
+   Point your server root to this directory. For quick testing you can use PHP's built‑in server:
+   ```bash
+   php -S localhost:8000
+   ```
 
-4. **Point your web server’s root to the project directory**
-   - Apache: configure `DocumentRoot` to point to `/path/to/FolioFlow`
-   - Nginx: use `root /path/to/FolioFlow;`
+## Usage
 
----
+1. Visit `/register` to create a new account and log in.
+2. Use the dashboard to add investments and track your portfolio.
+3. View analytics for ROI and closed positions.
 
-## 📁 Project Structure
+## Project Structure
 
-```
+```text
 FolioFlow/
-├── api/                   # (Reserved for future REST APIs)
-├── classes/               # Core classes (Database, Investment, Analytics, etc.)
-├── config/                # Configuration files (.env loader, DB config)
-├── controllers/           # Page controllers (dashboard, login, investments, etc.)
-├── middleware/            # Authentication and price check middleware
-├── views/                 # HTML views and partials
-├── logs/                  # Error logs (auto-generated)
-├── index.php              # App entry point & router
-├── router.php             # Route definitions
-└── .env                   # Environment configuration (ignored by Git)
+├── api/            # (reserved for future APIs)
+├── classes/        # Core classes such as Database and Investment
+├── config/         # Configuration and .env loader
+├── controllers/    # Application controllers
+├── middleware/     # Authentication and price checking
+├── views/          # HTML templates
+├── logs/           # Generated log files (ignored in Git)
+├── index.php       # Application entry point
+├── router.php      # Route definitions
+└── .env            # Environment configuration (not committed)
 ```
 
----
 
-## 🧪 Development Tips
+## License
 
-- Use `dd($value)` helper to debug variables (disabled in production).
-- Use `urlIs('/path')` to highlight active links in navigation.
-- Custom middleware ensures prices are updated only every 15 minutes for efficiency.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
-
----
+This project is available under the [MIT License](LICENSE).

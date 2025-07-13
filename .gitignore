@@ -10,6 +10,7 @@ composer.lock
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Logs
 /logs/
