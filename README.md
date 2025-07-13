@@ -73,9 +73,6 @@ FolioFlow/
 └── .env            # Environment configuration (not committed)
 ```
 
-## Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
